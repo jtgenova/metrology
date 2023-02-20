@@ -17,37 +17,46 @@ def similarity_transform(xc, yc, xf, yf):
     Find scale (lambda)
     Find rotation (theta)
     """
-    unknowns = 4
+    unknowns = 32
     l_mat = np.zeros(shape=(unknowns,1))
     idx = 0
     for i in range(0, unknowns, 2):
         l_mat[i] = xf[idx]
         l_mat[i+1] = yf[idx]
         idx += 1
-
+    
     A_mat = np.zeros(shape=(unknowns,4))
     idx = 0
     for i in range(0, unknowns, 2):
         A_mat[i] = [xc[idx], -yc[idx], 1, 0]
         A_mat[i+1] = [yc[idx], xc[idx], 0, 1]
         idx +=1 
+    # print(A_mat)
 
     x_hat = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A_mat),A_mat)), np.transpose(A_mat)), l_mat)
     A, B, Dx, Dy = float(x_hat[0]), float(x_hat[1]), float(x_hat[2]), float(x_hat[3])
     scale = math.sqrt(A**2 + B**2)
     theta = math.atan(B/A)
-
-    # print(A)
-    # print(B)
+    
+    # print(x_hat)
+    print(f'A: {A}')
+    print(f'B: {B}')
     print(f'delta X: {Dx}')
     print(f'delta Y: {Dy}')
     print(f'scale: {scale}')
     print(f'theta: {theta}')
     
     v = np.dot(A_mat, x_hat) - l_mat
-    print(v[0])
-    
-    return Dx, Dy, scale, theta
+    unknowns = 32
+    v_mat = np.zeros(shape=(16,2))
+    idx = 0
+    for i in range(0, 16, 2):
+        l_mat[i] = xf[idx]
+        l_mat[i+1] = yf[idx]
+        idx += 1
+    print(v)
+    return 
+    # return Dx, Dy, scale, theta
 
 def affine_transform(xc, yc, xf, yf):
     """
@@ -103,10 +112,13 @@ def projective_trans(xc, yc, xf, yf):
     return
 
 if __name__=="__main__":
-    xc = [-113.767, -43.717, 36.361, 106.408, 107.189, 37.137, -42.919, -102.968, -112.052, -42.005, 38.051, 108.089, 108.884, 38.846, 108.089, -111.249]
-    yc = [-107.400, -108.204, -109.132, -109.923, -39.874, -39.070, -38.158, -37.446, -42.714, 41.903, 40.985, 40.189, 110.221, 111.029, 111.961, 112.759]
+    # test vals
+    xc = [-113.767, -43.717, 36.361, 106.408, 107.189, 37.137, -42.919, -102.968, -112.052, -42.005, 38.051, 108.089, 108.884, 38.846, -41.208, -111.249]
+    yc = [-107.400, -108.204, -109.132, -109.923, -39.874, -39.070, -38.158, -37.446, 42.714, 41.903, 40.985, 40.189, 110.221, 111.029, 111.961, 112.759]
     xf = [-110, -40, 40, 110, 110, 40, -40, -100, -110, -40, 40, 110, 110, 40, -40, -110]
     yf = [-110, -110, -110, -110, -40, -40, -40, -40, 40, 40, 40, 40, 110, 110, 110, 110]
+
+    # assignment vals
 
     sim_Dx, sim_Dy, sim_scale, sim_theta = similarity_transform(xc, yc, xf, yf)
     # matplotlib.pyplot.quiver(xc, yc, xf, yf)
