@@ -9,6 +9,7 @@ Deadline: February 22, 2023 10:00 AM
 import time
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 def similarity_transform(xc, yc, xf, yf):
     """
@@ -17,6 +18,8 @@ def similarity_transform(xc, yc, xf, yf):
     Find scale (lambda)
     Find rotation (theta)
     """
+    print('-'*79)
+    print("Similarity Transform")
     unknowns = 32
     l_mat = np.zeros(shape=(unknowns,1))
     idx = 0
@@ -31,32 +34,51 @@ def similarity_transform(xc, yc, xf, yf):
         A_mat[i] = [xc[idx], -yc[idx], 1, 0]
         A_mat[i+1] = [yc[idx], xc[idx], 0, 1]
         idx +=1 
-    # print(A_mat)
 
     x_hat = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A_mat),A_mat)), np.transpose(A_mat)), l_mat)
     A, B, Dx, Dy = float(x_hat[0]), float(x_hat[1]), float(x_hat[2]), float(x_hat[3])
     scale = math.sqrt(A**2 + B**2)
     theta = math.atan(B/A)
     
-    # print(x_hat)
+    print('-'*79)
     print(f'A: {A}')
     print(f'B: {B}')
+
+    print('-'*79)
     print(f'delta X: {Dx}')
     print(f'delta Y: {Dy}')
     print(f'scale: {scale}')
     print(f'theta: {theta}')
     
     v = np.dot(A_mat, x_hat) - l_mat
-    unknowns = 32
     v_mat = np.zeros(shape=(16,2))
     idx = 0
-    for i in range(0, 16, 2):
-        l_mat[i] = xf[idx]
-        l_mat[i+1] = yf[idx]
+    x_rms = 0
+    y_rms = 0
+    for i in range(0, unknowns, 2):
+        v_mat[idx] = [v[i], v[i+1]]
+        x_rms = x_rms + v[i]**2
+        y_rms = y_rms + v[i+1]**2
         idx += 1
-    print(v)
-    return 
-    # return Dx, Dy, scale, theta
+    x_rms = math.sqrt((1/16)*x_rms)
+    y_rms = math.sqrt((1/16)*y_rms)
+    print('-'*79)
+    print('Residuals: ')
+    print(v_mat)
+    print(f'x RMS {x_rms}')
+    print(f'y RMS {y_rms}')
+    print('-'*79)
+
+    fig, ax = plt.subplots(figsize = (5, 5))
+    for i in range(16):
+        ax.quiver(xc[i], yc[i], v_mat[i,0], v_mat[i,1])
+    ax.set_xlabel('x(mm)')
+    ax.set_ylabel('y(mm)')
+    ax.set_title('Image Point Residual Plot')
+    
+    plt.show()
+     
+    return Dx, Dy, scale, theta
 
 def affine_transform(xc, yc, xf, yf):
     """
@@ -66,7 +88,9 @@ def affine_transform(xc, yc, xf, yf):
     Find scale (Sx, Sy)
     Find non-orthogonality of comparator axes (delta)
     """
-    unknowns = 6
+    print('-'*79)
+    print('Affine Transform')
+    unknowns = 32
     l_mat = np.zeros(shape=(unknowns,1))
     idx = 0
     for i in range(0, unknowns, 2):
@@ -88,15 +112,47 @@ def affine_transform(xc, yc, xf, yf):
     Sy = math.sqrt(B**2 + D**2)
     delta =math.atan((A*B + C*D)/(A*D - B*C))
 
-    # print(f'delta X: {Dx}')
-    # print(f'delta Y: {Dy}')
-    # print(f'theta: {theta}')
-    # print(f'Scale X: {Sx}')
-    # print(f'Scale Y: {Sy}')
-    # print(f'delta: {delta}')
+    print('-'*79)
+    print(f'A: {A}')
+    print(f'B: {B}')
+    print(f'C: {C}')
+    print(f'D: {D}')
+
+    print('-'*79)
+    print(f'delta X: {Dx}')
+    print(f'delta Y: {Dy}')
+    print(f'theta: {theta}')
+    print(f'Scale X: {Sx}')
+    print(f'Scale Y: {Sy}')
+    print(f'delta: {delta}')
 
     v = np.dot(A_mat, x_hat) - l_mat
-    print(v)
+    v_mat = np.zeros(shape=(16,2))
+    idx = 0
+    x_rms = 0
+    y_rms = 0
+    for i in range(0, unknowns, 2):
+        v_mat[idx] = [v[i], v[i+1]]
+        x_rms = x_rms + v[i]**2
+        y_rms = y_rms + v[i+1]**2
+        idx += 1
+    x_rms = math.sqrt((1/16)*x_rms)
+    y_rms = math.sqrt((1/16)*y_rms)
+    print('-'*79)
+    print('Residuals: ')
+    print(v_mat)
+    print(f'x RMS {x_rms}')
+    print(f'y RMS {y_rms}')
+    print('-'*79)
+
+    fig, ax = plt.subplots(figsize = (5, 5))
+    for i in range(16):
+        ax.quiver(xc[i], yc[i], v_mat[i,0], v_mat[i,1])
+    ax.set_xlabel('x(mm)')
+    ax.set_ylabel('y(mm)')
+    ax.set_title('Image Point Residual Plot')
+    
+    plt.show()
 
     return Dx, Dy, theta, Sx, Sy, delta
 
@@ -120,8 +176,7 @@ if __name__=="__main__":
 
     # assignment vals
 
-    sim_Dx, sim_Dy, sim_scale, sim_theta = similarity_transform(xc, yc, xf, yf)
-    # matplotlib.pyplot.quiver(xc, yc, xf, yf)
-    # aff_Dx, aff_Dy, aff_theta, aff_Sx, aff_Sy, aff_delta = affine_transform(xc, yc, xf, yf)
+    # sim_Dx, sim_Dy, sim_scale, sim_theta = similarity_transform(xc, yc, xf, yf)
+    aff_Dx, aff_Dy, aff_theta, aff_Sx, aff_Sy, aff_delta = affine_transform(xc, yc, xf, yf)
 
 
