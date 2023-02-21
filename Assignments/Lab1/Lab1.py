@@ -107,8 +107,8 @@ def affine_transform(xc, yc, xf, yf):
     A_mat = np.zeros(shape=(mat_size,6))
     idx = 0
     for i in range(0, mat_size, 2):
-        A_mat[i] = [xc[idx], -yc[idx], 1, 0, 0 ,0]
-        A_mat[i+1] = [0, 0, 0, yc[idx], xc[idx], 1]
+        A_mat[i] = [xc[idx], yc[idx], 1, 0, 0 ,0]
+        A_mat[i+1] = [0, 0, 0, xc[idx], yc[idx], 1]
         idx +=1 
 
     x_hat = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A_mat),A_mat)), np.transpose(A_mat)), l_mat)
@@ -175,6 +175,80 @@ def projective_trans(xc, yc, xf, yf):
     Find rotation (theta)
     Find out of plane inclination (2 parameters)
     """
+    print('-'*79)
+    print("Projective Transform")
+    n = len(xc)
+    mat_size = 2*n
+
+    l_mat = np.zeros(shape=(mat_size,1))
+    idx = 0
+    for i in range(0, mat_size, 2):
+        l_mat[i] = xf[idx]
+        l_mat[i+1] = yf[idx]
+        idx += 1
+
+    A_mat = np.zeros(shape=(mat_size,9))
+    idx = 0
+    for i in range(0, mat_size, 2):
+        # A_mat[i] = [xc[idx], yc[idx], 1, 0, 0 ,0, -xf[idx]*xc[idx], -xf[idx]*yc[idx]]
+        # A_mat[i+1] = [0, 0, 0, xc[idx], yc[idx], 1, -yf[idx]*xc[idx], -yf[idx]*yc[idx]]
+        A_mat[i] = [xc[idx], yc[idx], 1, 0, 0 ,0, -xf[idx]*xc[idx], -xf[idx]*yc[idx], -xf[idx]]
+        A_mat[i+1] = [0, 0, 0, xc[idx], yc[idx], 1, -yf[idx]*xc[idx], -yf[idx]*yc[idx], -yf[idx]]
+        idx +=1 
+    
+    x_hat = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A_mat),A_mat)), np.transpose(A_mat)), l_mat)
+    A, B, Dx, C, D, Dy, plane_incline1, plane_incline2 = float(x_hat[0]), float(x_hat[1]), float(x_hat[2]), float(x_hat[3]), float(x_hat[4]), float(x_hat[5]), float(x_hat[6]), float(x_hat[7])
+    theta = math.atan(C/A)
+    Sx = math.sqrt(A**2 + C**2)
+    Sy = math.sqrt(B**2 + D**2)
+    delta =math.atan((A*B + C*D)/(A*D - B*C))
+    
+    print('-'*79)
+    print(f'A: {A}')
+    print(f'B: {B}')
+    print(f'C: {C}')
+    print(f'D: {D}')
+    print('\n')
+
+    print('-'*79)
+    print(f'delta X: {Dx}')
+    print(f'delta Y: {Dy}')
+    print(f'theta: {theta}')
+    print(f'Scale X: {Sx}')
+    print(f'Scale Y: {Sy}')
+    print(f'delta: {delta}')
+    print(f'out of plane inclination: {plane_incline1, plane_incline2}')
+    print('\n')
+
+    v = np.dot(A_mat, x_hat) - l_mat
+    v_mat = np.zeros(shape=(n,2))
+    idx = 0
+    x_rms = 0
+    y_rms = 0
+    for i in range(0, mat_size, 2):
+        v_mat[idx] = [v[i], v[i+1]]
+        x_rms = x_rms + v[i]**2
+        y_rms = y_rms + v[i+1]**2
+        idx += 1
+    x_rms = math.sqrt((1/n)*x_rms)
+    y_rms = math.sqrt((1/n)*y_rms)
+    print('-'*79)
+    print('Residuals: ')
+    print(v_mat)
+    print('\n')
+    print(f'x RMS {x_rms}')
+    print(f'y RMS {y_rms}')
+    print('\n')
+    print('-'*79)
+
+    fig, ax = plt.subplots(figsize = (5, 5))
+    for i in range(n):
+        ax.quiver(xc[i], yc[i], v_mat[i,0], v_mat[i,1])
+    ax.set_xlabel('x(mm)')
+    ax.set_ylabel('y(mm)')
+    ax.set_title('Image Point Residual Plot')
+    
+    plt.show()
     return
 
 if __name__=="__main__":
@@ -200,5 +274,7 @@ if __name__=="__main__":
     # sim_Dx, sim_Dy, sim_scale, sim_theta = similarity_transform(xc, yc, xf2, yf2)
     # aff_Dx, aff_Dy, aff_theta, aff_Sx, aff_Sy, aff_delta = affine_transform(xc, yc, xf1, yf1)
     # aff_Dx, aff_Dy, aff_theta, aff_Sx, aff_Sy, aff_delta = affine_transform(xc, yc, xf2, yf2)
+    # projective_trans(xc, yc, xf1, yf1)
+    projective_trans(xc, yc, xf2, yf2)
 
 
