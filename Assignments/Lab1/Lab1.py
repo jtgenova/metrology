@@ -44,14 +44,12 @@ def similarity_transform(xc, yc, xf, yf):
     print('-'*79)
     print(f'A: {A}')
     print(f'B: {B}')
-    print('\n')
 
     print('-'*79)
     print(f'delta X: {Dx}')
     print(f'delta Y: {Dy}')
     print(f'scale: {scale}')
     print(f'theta: {theta}')
-    print('\n')
     
     v = np.dot(A_mat, x_hat) - l_mat
     v_mat = np.zeros(shape=(n,2))
@@ -68,10 +66,8 @@ def similarity_transform(xc, yc, xf, yf):
     print('-'*79)
     print('Residuals: ')
     print(v_mat)
-    print('\n')
     print(f'x RMS {x_rms}')
     print(f'y RMS {y_rms}')
-    print('\n')
     print('-'*79)
 
     fig, ax = plt.subplots(figsize = (5, 5))
@@ -83,7 +79,7 @@ def similarity_transform(xc, yc, xf, yf):
     
     plt.show()
      
-    return Dx, Dy, scale, theta
+    return
 
 def affine_transform(xc, yc, xf, yf):
     """
@@ -123,7 +119,6 @@ def affine_transform(xc, yc, xf, yf):
     print(f'B: {B}')
     print(f'C: {C}')
     print(f'D: {D}')
-    print('\n')
 
     print('-'*79)
     print(f'delta X: {Dx}')
@@ -132,7 +127,6 @@ def affine_transform(xc, yc, xf, yf):
     print(f'Scale X: {Sx}')
     print(f'Scale Y: {Sy}')
     print(f'delta: {delta}')
-    print('\n')
 
     v = np.dot(A_mat, x_hat) - l_mat
     v_mat = np.zeros(shape=(n,2))
@@ -149,10 +143,8 @@ def affine_transform(xc, yc, xf, yf):
     print('-'*79)
     print('Residuals: ')
     print(v_mat)
-    print('\n')
     print(f'x RMS {x_rms}')
     print(f'y RMS {y_rms}')
-    print('\n')
     print('-'*79)
 
     fig, ax = plt.subplots(figsize = (5, 5))
@@ -164,7 +156,7 @@ def affine_transform(xc, yc, xf, yf):
     
     plt.show()
 
-    return Dx, Dy, theta, Sx, Sy, delta
+    return 
 
 def projective_trans(xc, yc, xf, yf):
     """
@@ -187,13 +179,13 @@ def projective_trans(xc, yc, xf, yf):
         l_mat[i+1] = yf[idx]
         idx += 1
 
-    A_mat = np.zeros(shape=(mat_size,9))
+    A_mat = np.zeros(shape=(mat_size,8))
     idx = 0
     for i in range(0, mat_size, 2):
-        # A_mat[i] = [xc[idx], yc[idx], 1, 0, 0 ,0, -xf[idx]*xc[idx], -xf[idx]*yc[idx]]
-        # A_mat[i+1] = [0, 0, 0, xc[idx], yc[idx], 1, -yf[idx]*xc[idx], -yf[idx]*yc[idx]]
-        A_mat[i] = [xc[idx], yc[idx], 1, 0, 0 ,0, -xf[idx]*xc[idx], -xf[idx]*yc[idx], -xf[idx]]
-        A_mat[i+1] = [0, 0, 0, xc[idx], yc[idx], 1, -yf[idx]*xc[idx], -yf[idx]*yc[idx], -yf[idx]]
+        A_mat[i] = [xc[idx], yc[idx], 1, 0, 0 ,0, -xf[idx]*xc[idx], -xf[idx]*yc[idx]]
+        A_mat[i+1] = [0, 0, 0, xc[idx], yc[idx], 1, -yf[idx]*xc[idx], -yf[idx]*yc[idx]]
+        # A_mat[i] = [xc[idx], yc[idx], 1, 0, 0 ,0, -xf[idx]*xc[idx], -xf[idx]*yc[idx], -xf[idx]]
+        # A_mat[i+1] = [0, 0, 0, xc[idx], yc[idx], 1, -yf[idx]*xc[idx], -yf[idx]*yc[idx], -yf[idx]]
         idx +=1 
     
     x_hat = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A_mat),A_mat)), np.transpose(A_mat)), l_mat)
@@ -208,7 +200,6 @@ def projective_trans(xc, yc, xf, yf):
     print(f'B: {B}')
     print(f'C: {C}')
     print(f'D: {D}')
-    print('\n')
 
     print('-'*79)
     print(f'delta X: {Dx}')
@@ -218,7 +209,6 @@ def projective_trans(xc, yc, xf, yf):
     print(f'Scale Y: {Sy}')
     print(f'delta: {delta}')
     print(f'out of plane inclination: {plane_incline1, plane_incline2}')
-    print('\n')
 
     v = np.dot(A_mat, x_hat) - l_mat
     v_mat = np.zeros(shape=(n,2))
@@ -235,10 +225,8 @@ def projective_trans(xc, yc, xf, yf):
     print('-'*79)
     print('Residuals: ')
     print(v_mat)
-    print('\n')
     print(f'x RMS {x_rms}')
     print(f'y RMS {y_rms}')
-    print('\n')
     print('-'*79)
 
     fig, ax = plt.subplots(figsize = (5, 5))
@@ -270,11 +258,11 @@ if __name__=="__main__":
     xf2 = [1347, 19175, 1359, 19163, 850, 19673, 10268, 10254]
     yf2 = [-19286, -1484, -1472, -19297, -10379, -10390, -973, -19796]
 
-    # sim_Dx, sim_Dy, sim_scale, sim_theta = similarity_transform(xc, yc, xf1, yf1)
-    # sim_Dx, sim_Dy, sim_scale, sim_theta = similarity_transform(xc, yc, xf2, yf2)
-    # aff_Dx, aff_Dy, aff_theta, aff_Sx, aff_Sy, aff_delta = affine_transform(xc, yc, xf1, yf1)
-    # aff_Dx, aff_Dy, aff_theta, aff_Sx, aff_Sy, aff_delta = affine_transform(xc, yc, xf2, yf2)
-    # projective_trans(xc, yc, xf1, yf1)
+    similarity_transform(xc, yc, xf1, yf1)
+    similarity_transform(xc, yc, xf2, yf2)
+    affine_transform(xc, yc, xf1, yf1)
+    affine_transform(xc, yc, xf2, yf2)
+    projective_trans(xc, yc, xf1, yf1)
     projective_trans(xc, yc, xf2, yf2)
 
 
