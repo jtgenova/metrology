@@ -22,13 +22,16 @@ def similarity_transform(xc, yc, xf, yf):
     print("Similarity Transform")
     n = len(xc)
     mat_size = 2*n
+
+    # create l-vector
     l_mat = np.zeros(shape=(mat_size,1))
     idx = 0
     for i in range(0, mat_size, 2):
         l_mat[i] = xf[idx]
         l_mat[i+1] = yf[idx]
         idx += 1
-    
+
+    # create A-matrix
     A_mat = np.zeros(shape=(mat_size,4))
     idx = 0
     for i in range(0, mat_size, 2):
@@ -36,26 +39,32 @@ def similarity_transform(xc, yc, xf, yf):
         A_mat[i+1] = [yc[idx], xc[idx], 0, 1]
         idx +=1 
 
+    # calculate the unknowns x_hat
     x_hat = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A_mat),A_mat)), np.transpose(A_mat)), l_mat)
     A, B, Dx, Dy = float(x_hat[0]), float(x_hat[1]), float(x_hat[2]), float(x_hat[3])
     scale = math.sqrt(A**2 + B**2)
     theta = math.atan(B/A)
     
+    # print linear parameters
     print('-'*79)
     print(f'A: {A}')
     print(f'B: {B}')
 
+    # print non-linear parameters
     print('-'*79)
     print(f'delta X: {Dx}')
     print(f'delta Y: {Dy}')
     print(f'scale: {scale}')
     print(f'theta: {theta}')
     
+    # create residuals vector
     v = np.dot(A_mat, x_hat) - l_mat
     v_mat = np.zeros(shape=(n,2))
     idx = 0
     x_rms = 0
     y_rms = 0
+
+    # calculate rms
     for i in range(0, mat_size, 2):
         v_mat[idx] = [v[i], v[i+1]]
         x_rms = x_rms + v[i]**2
@@ -70,6 +79,7 @@ def similarity_transform(xc, yc, xf, yf):
     print(f'y RMS {y_rms}')
     print('-'*79)
 
+    # quiver plot of vals and residuals
     fig, ax = plt.subplots(figsize = (5, 5))
     for i in range(n):
         ax.quiver(xc[i], yc[i], v_mat[i,0], v_mat[i,1])
@@ -93,6 +103,8 @@ def affine_transform(xc, yc, xf, yf):
     print('Affine Transform')
     n = len(xc)
     mat_size = 2*n
+
+    # create l-vector
     l_mat = np.zeros(shape=(mat_size,1))
     idx = 0
     for i in range(0, mat_size, 2):
@@ -100,6 +112,7 @@ def affine_transform(xc, yc, xf, yf):
         l_mat[i+1] = yf[idx]
         idx += 1
 
+    # create A-matrix
     A_mat = np.zeros(shape=(mat_size,6))
     idx = 0
     for i in range(0, mat_size, 2):
@@ -107,6 +120,7 @@ def affine_transform(xc, yc, xf, yf):
         A_mat[i+1] = [0, 0, 0, xc[idx], yc[idx], 1]
         idx +=1 
 
+    # calculate the unknowns x_hat
     x_hat = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A_mat),A_mat)), np.transpose(A_mat)), l_mat)
     A, B, Dx, C, D, Dy = float(x_hat[0]), float(x_hat[1]), float(x_hat[2]), float(x_hat[3]), float(x_hat[4]), float(x_hat[5])
     theta = math.atan(C/A)
@@ -114,12 +128,14 @@ def affine_transform(xc, yc, xf, yf):
     Sy = math.sqrt(B**2 + D**2)
     delta =math.atan((A*B + C*D)/(A*D - B*C))
 
+    # print linear parameters
     print('-'*79)
     print(f'A: {A}')
     print(f'B: {B}')
     print(f'C: {C}')
     print(f'D: {D}')
 
+    # print non-linear parameters
     print('-'*79)
     print(f'delta X: {Dx}')
     print(f'delta Y: {Dy}')
@@ -128,11 +144,14 @@ def affine_transform(xc, yc, xf, yf):
     print(f'Scale Y: {Sy}')
     print(f'delta: {delta}')
 
+    # create residuals vector
     v = np.dot(A_mat, x_hat) - l_mat
     v_mat = np.zeros(shape=(n,2))
     idx = 0
     x_rms = 0
     y_rms = 0
+
+    # calculate rms
     for i in range(0, mat_size, 2):
         v_mat[idx] = [v[i], v[i+1]]
         x_rms = x_rms + v[i]**2
@@ -147,6 +166,7 @@ def affine_transform(xc, yc, xf, yf):
     print(f'y RMS {y_rms}')
     print('-'*79)
 
+    # quiver plot of vals and residuals
     fig, ax = plt.subplots(figsize = (5, 5))
     for i in range(n):
         ax.quiver(xc[i], yc[i], v_mat[i,0], v_mat[i,1])
@@ -172,6 +192,7 @@ def projective_trans(xc, yc, xf, yf):
     n = len(xc)
     mat_size = 2*n
 
+    # create l-vector
     l_mat = np.zeros(shape=(mat_size,1))
     idx = 0
     for i in range(0, mat_size, 2):
@@ -179,15 +200,15 @@ def projective_trans(xc, yc, xf, yf):
         l_mat[i+1] = yf[idx]
         idx += 1
 
+    # create A-matrix
     A_mat = np.zeros(shape=(mat_size,8))
     idx = 0
     for i in range(0, mat_size, 2):
         A_mat[i] = [xc[idx], yc[idx], 1, 0, 0 ,0, -xf[idx]*xc[idx], -xf[idx]*yc[idx]]
         A_mat[i+1] = [0, 0, 0, xc[idx], yc[idx], 1, -yf[idx]*xc[idx], -yf[idx]*yc[idx]]
-        # A_mat[i] = [xc[idx], yc[idx], 1, 0, 0 ,0, -xf[idx]*xc[idx], -xf[idx]*yc[idx], -xf[idx]]
-        # A_mat[i+1] = [0, 0, 0, xc[idx], yc[idx], 1, -yf[idx]*xc[idx], -yf[idx]*yc[idx], -yf[idx]]
         idx +=1 
     
+    # calculate the unknowns x_hat
     x_hat = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(A_mat),A_mat)), np.transpose(A_mat)), l_mat)
     A, B, Dx, C, D, Dy, plane_incline1, plane_incline2 = float(x_hat[0]), float(x_hat[1]), float(x_hat[2]), float(x_hat[3]), float(x_hat[4]), float(x_hat[5]), float(x_hat[6]), float(x_hat[7])
     theta = math.atan(C/A)
@@ -195,12 +216,14 @@ def projective_trans(xc, yc, xf, yf):
     Sy = math.sqrt(B**2 + D**2)
     delta =math.atan((A*B + C*D)/(A*D - B*C))
     
+    # print linear parameters
     print('-'*79)
     print(f'A: {A}')
     print(f'B: {B}')
     print(f'C: {C}')
     print(f'D: {D}')
 
+    # print non-linear parameters
     print('-'*79)
     print(f'delta X: {Dx}')
     print(f'delta Y: {Dy}')
@@ -210,11 +233,14 @@ def projective_trans(xc, yc, xf, yf):
     print(f'delta: {delta}')
     print(f'out of plane inclination: {plane_incline1, plane_incline2}')
 
+    # create residuals vector
     v = np.dot(A_mat, x_hat) - l_mat
     v_mat = np.zeros(shape=(n,2))
     idx = 0
     x_rms = 0
     y_rms = 0
+
+    # calculate rms
     for i in range(0, mat_size, 2):
         v_mat[idx] = [v[i], v[i+1]]
         x_rms = x_rms + v[i]**2
@@ -229,6 +255,7 @@ def projective_trans(xc, yc, xf, yf):
     print(f'y RMS {y_rms}')
     print('-'*79)
 
+    # quiver plot of vals and residuals
     fig, ax = plt.subplots(figsize = (5, 5))
     for i in range(n):
         ax.quiver(xc[i], yc[i], v_mat[i,0], v_mat[i,1])
