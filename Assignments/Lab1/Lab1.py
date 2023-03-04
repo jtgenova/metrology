@@ -153,7 +153,8 @@ def affine_transform(xc, yc, xf, yf):
 
     # calculate rms
     for i in range(0, mat_size, 2):
-        v_mat[idx] = [v[i], v[i+1]]
+        v_mat[idx][0] = v[i]
+        v_mat[idx][1] = v[i+1]
         x_rms = x_rms + v[i]**2
         y_rms = y_rms + v[i+1]**2
         idx += 1
@@ -285,11 +286,11 @@ if __name__=="__main__":
     xf2 = [1347, 19175, 1359, 19163, 850, 19673, 10268, 10254]
     yf2 = [-19286, -1484, -1472, -19297, -10379, -10390, -973, -19796]
 
-    similarity_transform(xc, yc, xf1, yf1)
-    similarity_transform(xc, yc, xf2, yf2)
+    # similarity_transform(xc, yc, xf1, yf1)
+    # similarity_transform(xc, yc, xf2, yf2)
     affine_transform(xc, yc, xf1, yf1)
-    affine_transform(xc, yc, xf2, yf2)
-    projective_trans(xc, yc, xf1, yf1)
-    projective_trans(xc, yc, xf2, yf2)
+    # affine_transform(xc, yc, xf2, yf2)
+    # projective_trans(xc, yc, xf1, yf1)
+    # projective_trans(xc, yc, xf2, yf2)
 
 
