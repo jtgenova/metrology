@@ -89,13 +89,13 @@ if __name__=="__main__":
     principal_point_offset = [-0.006, 0.006] # [xp, yp] mm
     radial_lens_distortion = [-0.8878e-4, -0.1528e-7, 0.5256e-12] # [K0, K1, K2]
     decentering_distortion = [0.1346e-06, 0.1224e-07] # [P1, P2]
-    k_atmos = 1
     c = 3e8 # speed of light
     # Given from handout
-    elevation = 1860 # m
-    average_ground_elevation = 1100 # m
+    H = 1860 # [m] elevation
+    h = 1100 # [m] ground elevation
     scale_number = 5000
     image_size = 9 # in square
+    k_atmos = (2410*H)/(H**2 -6*H + 250) - (2410*h)/(h**2 - 6*h + 250)*(h/H)
     # Given from affine transformation:
     delta_X = -122.01704301790505
     delta_Y = 123.53429666924897
@@ -111,22 +111,23 @@ if __name__=="__main__":
     xc2 = [1411, 9416, 2275, 11129, 4160, 10137, 3726, 6161, 1954, 6984]
     yc2 = [-2081, -1167, -10787, -10048, -17085, -17690, -854, -9528, -14416, -17948]
 
-    # Image 1
-    print("Image 1:")
-    img1_fid = get_fiducial(xc1, yc1, A_mat, delta_X, delta_Y)
-    img1_pp, img1_r = get_pp(img1_fid, principal_point_offset)
-    img1_rad_correction = get_radial(img1_pp, img1_r, radial_lens_distortion)
-    img1_dec_correction = get_decentering(img1_pp, img1_r, decentering_distortion)
-    img1_atmos_correction = get_atmos(img1_pp, img1_r, c, k_atmos)
-    img1_new_coords = new_coords(img1_pp, img1_rad_correction, img1_dec_correction, img1_atmos_correction)
+    # # Image 1
+    # print("Image 1:")
+    # img1_fid = get_fiducial(xc1, yc1, A_mat, delta_X, delta_Y)
+    # img1_pp, img1_r = get_pp(img1_fid, principal_point_offset)
+    # img1_rad_correction = get_radial(img1_pp, img1_r, radial_lens_distortion)
+    # img1_dec_correction = get_decentering(img1_pp, img1_r, decentering_distortion)
+    # img1_atmos_correction = get_atmos(img1_pp, img1_r, c, k_atmos)
+    # img1_new_coords = new_coords(img1_pp, img1_rad_correction, img1_dec_correction, img1_atmos_correction)
 
 
-    # # Image 2
-    # print('-'*75)
-    # print("Image 2:")    
-    # img2_fid = get_fiducial(xc2, yc2, A_mat, delta_X, delta_Y)
-    # img2_pp, img2_r = get_pp(img2_fid, principal_point_offset)
-    # img2_rad_correction = get_radial(img2_pp, img2_r, radial_lens_distortion)
-    # img2_dec_correction = get_decentering(img2_pp, img2_r, decentering_distortion)
-    # img2_atmos_correction = get_atmos(img2_pp, img2_r, c, k_atmos)
+    # Image 2
+    print('-'*75)
+    print("Image 2:")    
+    img2_fid = get_fiducial(xc2, yc2, A_mat, delta_X, delta_Y)
+    img2_pp, img2_r = get_pp(img2_fid, principal_point_offset)
+    img2_rad_correction = get_radial(img2_pp, img2_r, radial_lens_distortion)
+    img2_dec_correction = get_decentering(img2_pp, img2_r, decentering_distortion)
+    img2_atmos_correction = get_atmos(img2_pp, img2_r, c, k_atmos)
+    img2_new_coords = new_coords(img2_pp, img2_rad_correction, img2_dec_correction, img2_atmos_correction)
 
