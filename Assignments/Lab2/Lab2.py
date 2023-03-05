@@ -60,6 +60,26 @@ def get_decentering(coords, r, P):
     print(f'Decentering Lens Distortion Correction: \n {dec_correction}\n')
     return dec_correction
 
+def get_atmos(coords,r, c, K):
+    idx = 0
+    atmos_correction = np.zeros(shape=(len(coords),2))
+    for i in range(len(coords)):
+        atmos_correction[idx][0] = -coords[i][0]*K*(1 + r[i]**2/c**2)
+        atmos_correction[idx][1] = -coords[i][1]*K*(1 + r[i]**2/c**2)
+        idx += 1
+    print(f'Atmospheric Refration Correction: \n {atmos_correction}\n')
+    return atmos_correction
+
+def new_coords(pp, rad, dec, atm):
+    idx = 0
+    new_coords = np.zeros(shape=(len(pp),2))
+    for i in range(len(new_coords)):
+        new_coords[idx][0] = pp[i][0] + rad[i][0] + dec[i][0] + atm[i][0]
+        new_coords[idx][1] = pp[i][1] + rad[i][1] + dec[i][1] + atm[i][1]
+        idx += 1
+    print(f'Total Correction: \n {new_coords}\n')
+    return new_coords
+
 # def get_atmost:
 
 if __name__=="__main__":
@@ -97,7 +117,8 @@ if __name__=="__main__":
     img1_pp, img1_r = get_pp(img1_fid, principal_point_offset)
     img1_rad_correction = get_radial(img1_pp, img1_r, radial_lens_distortion)
     img1_dec_correction = get_decentering(img1_pp, img1_r, decentering_distortion)
-    # get_atmos(img1_pp, img1_r, c, k_atmos)
+    img1_atmos_correction = get_atmos(img1_pp, img1_r, c, k_atmos)
+    img1_new_coords = new_coords(img1_pp, img1_rad_correction, img1_dec_correction, img1_atmos_correction)
 
 
     # # Image 2
@@ -107,4 +128,5 @@ if __name__=="__main__":
     # img2_pp, img2_r = get_pp(img2_fid, principal_point_offset)
     # img2_rad_correction = get_radial(img2_pp, img2_r, radial_lens_distortion)
     # img2_dec_correction = get_decentering(img2_pp, img2_r, decentering_distortion)
+    # img2_atmos_correction = get_atmos(img2_pp, img2_r, c, k_atmos)
 
