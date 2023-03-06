@@ -2,9 +2,9 @@
 CIVE 6374 – Optical Imaging Metrology
 Professor: Dr. Craig Glennie
 Author: Joshua Genova
-Lab # 1
-Description: Similarity, Affine and Projective Transformations
-Deadline: February 22, 2023 10:00 AM
+Lab # 2
+Description: Applying Image Corrections
+Deadline: March 08, 2023 10:00 AM
 """
 import numpy as np
 import math
@@ -37,37 +37,49 @@ def get_pp(fid_coords, pp):
         r_vals[idx] = math.sqrt(x_temp**2 + y_temp**2)
         idx += 1
     print(f'Principal Point Offset Correction: \n {fid_coords_pp}\n')
-    print(f'Radius (r): \n {r_vals}\n')
+    # print(f'Radius (r): \n {r_vals}\n')
     return fid_coords_pp, r_vals
 
 def get_radial(coords, r, K):
     idx = 0
     rad_correction = np.zeros(shape=(len(coords),2))
+    corrected = np.zeros(shape=(len(coords),2))
     for i in range(len(coords)):
-        rad_correction[idx][0] = -coords[i][0]*(K[0]*r[i]**2 + K[1]*r[i]**4 + K[2]*r[i]**6)
-        rad_correction[idx][1] = -coords[i][1]*(K[0]*r[i]**2 + K[1]*r[i]**4 + K[2]*r[i]**6)
+        rad_correction[idx][0] = -coords[i][0]*(K[0] + K[1]*r[i]**2 + K[2]*r[i]**4)
+        rad_correction[idx][1] = -coords[i][1]*(K[0] + K[1]*r[i]**2 + K[2]*r[i]**4)
+        corrected[idx][0] = coords[i][0] + rad_correction[idx][0]
+        corrected[idx][1] = coords[i][1] + rad_correction[idx][1]
         idx += 1
-    print(f'Radial Lens Distortion Correction: \n {rad_correction}\n')
+    # print(f'Radial Lens Distortion Correction: \n {rad_correction}\n')
+    print(f'Radial Lens Distortion Correction: \n {corrected}\n')
     return rad_correction
 
 def get_decentering(coords, r, P):
     idx = 0
     dec_correction = np.zeros(shape=(len(coords),2))
+    corrected = np.zeros(shape=(len(coords),2))
     for i in range(len(coords)):
         dec_correction[idx][0] = -(P[0]*(r[i]**2 + 2*coords[i][0]**2) + 2*P[1]*coords[i][0]*coords[i][1])
         dec_correction[idx][1] = -(P[1]*(r[i]**2 + 2*coords[i][1]**2) + 2*P[0]*coords[i][0]*coords[i][1])
+        corrected[idx][0] = coords[i][0] + dec_correction[idx][0]
+        corrected[idx][1] = coords[i][1] + dec_correction[idx][1]
         idx += 1
-    print(f'Decentering Lens Distortion Correction: \n {dec_correction}\n')
+    # print(f'Decentering Lens Distortion Correction: \n {dec_correction}\n')
+    print(f'Decentering Lens Distortion Correction: \n {corrected}\n')
     return dec_correction
 
 def get_atmos(coords,r, c, K):
     idx = 0
     atmos_correction = np.zeros(shape=(len(coords),2))
+    corrected = np.zeros(shape=(len(coords),2))
     for i in range(len(coords)):
         atmos_correction[idx][0] = -coords[i][0]*K*(1 + r[i]**2/c**2)
         atmos_correction[idx][1] = -coords[i][1]*K*(1 + r[i]**2/c**2)
+        corrected[idx][0] = coords[i][0] + atmos_correction[idx][0]
+        corrected[idx][1] = coords[i][1] + atmos_correction[idx][1]
         idx += 1
-    print(f'Atmospheric Refration Correction: \n {atmos_correction}\n')
+    # print(f'Atmospheric Refration Correction: \n {atmos_correction}\n')
+    print(f'Atmospheric Refration Correction: \n {corrected}\n')
     return atmos_correction
 
 def new_coords(pp, rad, dec, atm):
@@ -89,7 +101,7 @@ if __name__=="__main__":
     principal_point_offset = [-0.006, 0.006] # [xp, yp] mm
     radial_lens_distortion = [-0.8878e-4, -0.1528e-7, 0.5256e-12] # [K0, K1, K2]
     decentering_distortion = [0.1346e-06, 0.1224e-07] # [P1, P2]
-    c = 3e8 # speed of light
+    c = focal_length # speed of light
     # Given from handout
     H = 1860 # [m] elevation
     h = 1100 # [m] ground elevation
@@ -111,23 +123,21 @@ if __name__=="__main__":
     xc2 = [1411, 9416, 2275, 11129, 4160, 10137, 3726, 6161, 1954, 6984]
     yc2 = [-2081, -1167, -10787, -10048, -17085, -17690, -854, -9528, -14416, -17948]
 
-    # # Image 1
-    # print("Image 1:")
-    # img1_fid = get_fiducial(xc1, yc1, A_mat, delta_X, delta_Y)
-    # img1_pp, img1_r = get_pp(img1_fid, principal_point_offset)
-    # img1_rad_correction = get_radial(img1_pp, img1_r, radial_lens_distortion)
-    # img1_dec_correction = get_decentering(img1_pp, img1_r, decentering_distortion)
-    # img1_atmos_correction = get_atmos(img1_pp, img1_r, c, k_atmos)
-    # img1_new_coords = new_coords(img1_pp, img1_rad_correction, img1_dec_correction, img1_atmos_correction)
+    # Image 1
+    print("Image 1:")
+    img1_fid = get_fiducial(xc1, yc1, A_mat, delta_X, delta_Y)
+    img1_pp, img1_r = get_pp(img1_fid, principal_point_offset)
+    img1_rad_correction = get_radial(img1_pp, img1_r, radial_lens_distortion)
+    img1_dec_correction = get_decentering(img1_pp, img1_r, decentering_distortion)
+    img1_atmos_correction = get_atmos(img1_pp, img1_r, c, k_atmos)
+    img1_new_coords = new_coords(img1_pp, img1_rad_correction, img1_dec_correction, img1_atmos_correction)
 
-
-    # Image 2
-    print('-'*75)
-    print("Image 2:")    
-    img2_fid = get_fiducial(xc2, yc2, A_mat, delta_X, delta_Y)
-    img2_pp, img2_r = get_pp(img2_fid, principal_point_offset)
-    img2_rad_correction = get_radial(img2_pp, img2_r, radial_lens_distortion)
-    img2_dec_correction = get_decentering(img2_pp, img2_r, decentering_distortion)
-    img2_atmos_correction = get_atmos(img2_pp, img2_r, c, k_atmos)
-    img2_new_coords = new_coords(img2_pp, img2_rad_correction, img2_dec_correction, img2_atmos_correction)
-
+    # # Image 2
+    # print('-'*75)
+    # print("Image 2:")    
+    # img2_fid = get_fiducial(xc2, yc2, A_mat, delta_X, delta_Y)
+    # img2_pp, img2_r = get_pp(img2_fid, principal_point_offset)
+    # img2_rad_correction = get_radial(img2_pp, img2_r, radial_lens_distortion)
+    # img2_dec_correction = get_decentering(img2_pp, img2_r, decentering_distortion)
+    # img2_atmos_correction = get_atmos(img2_pp, img2_r, c, k_atmos)
+    # img2_new_coords = new_coords(img2_pp, img2_rad_correction, img2_dec_correction, img2_atmos_correction)
