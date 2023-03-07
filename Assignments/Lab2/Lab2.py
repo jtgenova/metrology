@@ -92,7 +92,17 @@ def new_coords(pp, rad, dec, atm):
     print(f'Total Correction: \n {new_coords}\n')
     return new_coords
 
-# def get_atmost:
+def create_grid(img_size):
+    # convert img size to mm
+    img_size_to_mm = img_size * 25.4 / 2
+    x = np.linspace(-img_size_to_mm, img_size_to_mm, endpoint=True)
+    y = np.linspace(-img_size_to_mm, img_size_to_mm, endpoint=True)
+    x_coords, y_coords = np.meshgrid(x, y)
+    # plt.plot(x_coords, y_coords, marker='o', color='k', linestyle='none')
+    # plt.show()
+    return x_coords, y_coords
+    
+
 
 if __name__=="__main__":
     
@@ -111,9 +121,9 @@ if __name__=="__main__":
     # Given from affine transformation:
     delta_X = -122.01704301790505
     delta_Y = 123.53429666924897
-    A = 0.011899426266928173
-    B = 2.9976774439538446e-07
-    C = -1.3405013290104452e-06
+    A = 0.011899426266928175
+    B = 0.000000299767744395384
+    C = -0.00000134050132901044
     D = 0.011901264695956251
     A_mat = np.array([[A, B], [C, D]])
 
@@ -123,14 +133,15 @@ if __name__=="__main__":
     xc2 = [1411, 9416, 2275, 11129, 4160, 10137, 3726, 6161, 1954, 6984]
     yc2 = [-2081, -1167, -10787, -10048, -17085, -17690, -854, -9528, -14416, -17948]
 
-    # Image 1
-    print("Image 1:")
-    img1_fid = get_fiducial(xc1, yc1, A_mat, delta_X, delta_Y)
-    img1_pp, img1_r = get_pp(img1_fid, principal_point_offset)
-    img1_rad_correction = get_radial(img1_pp, img1_r, radial_lens_distortion)
-    img1_dec_correction = get_decentering(img1_pp, img1_r, decentering_distortion)
-    img1_atmos_correction = get_atmos(img1_pp, img1_r, c, k_atmos)
-    img1_new_coords = new_coords(img1_pp, img1_rad_correction, img1_dec_correction, img1_atmos_correction)
+    # # Image 1
+    # print("Image 1:")
+    # img1_fid = get_fiducial(xc1, yc1, A_mat, delta_X, delta_Y)
+    # img1_pp, img1_r = get_pp(img1_fid, principal_point_offset)
+    # img1_rad_correction = get_radial(img1_pp, img1_r, radial_lens_distortion)
+    # img1_dec_correction = get_decentering(img1_pp, img1_r, decentering_distortion)
+    # img1_atmos_correction = get_atmos(img1_pp, img1_r, c, k_atmos)
+    # img1_new_coords = new_coords(img1_pp, img1_rad_correction, img1_dec_correction, img1_atmos_correction)
+    create_grid(image_size)
 
     # # Image 2
     # print('-'*75)

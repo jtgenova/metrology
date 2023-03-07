@@ -288,11 +288,11 @@ if __name__=="__main__":
     xc2 = [1347, 19175, 1359, 19163, 850, 19673, 10268, 10254]
     yc2 = [-19286, -1484, -1472, -19297, -10379, -10390, -973, -19796]
 
-    similarity_transform(xc1, yc1, xf, yf)
-    similarity_transform(xc2, yc2, xf, yf)
+    # similarity_transform(xc1, yc1, xf, yf)
+    # similarity_transform(xc2, yc2, xf, yf)
     affine_transform(xc1, yc1, xf, yf)
-    affine_transform(xc2, yc2, xf, yf)
-    projective_trans(xc1, yc1, xf, yf)
-    projective_trans(xc2, yc2, xf, yf)
+    # affine_transform(xc2, yc2, xf, yf)
+    # projective_trans(xc1, yc1, xf, yf)
+    # projective_trans(xc2, yc2, xf, yf)
 
 
