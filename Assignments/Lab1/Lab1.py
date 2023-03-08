@@ -290,8 +290,8 @@ if __name__=="__main__":
 
     # similarity_transform(xc1, yc1, xf, yf)
     # similarity_transform(xc2, yc2, xf, yf)
-    affine_transform(xc1, yc1, xf, yf)
-    # affine_transform(xc2, yc2, xf, yf)
+    # affine_transform(xc1, yc1, xf, yf)
+    affine_transform(xc2, yc2, xf, yf)
     # projective_trans(xc1, yc1, xf, yf)
     # projective_trans(xc2, yc2, xf, yf)
 
