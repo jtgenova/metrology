@@ -12,7 +12,15 @@ import math
 import matplotlib.pyplot as plt
 import preLab3 as pre_lab_3
 
-def find_A_elems(xl, yl, c, xr, yr, zr, bx):
+def find_A_elems(xl, yl, c, xr, yr, zr):
+
+    bx = 92.0000
+    by = 5.0455
+    bz = 2.1725
+    w = 0.4392
+    phi = 1.5080
+    kappa = 3.1575
+
     dby = np.array([[0, 1, 0], [xl, yl, -c], [xr, yr, zr]])
     dby = np.linalg.det(dby)
     print(f'dby = {dby}')
@@ -24,10 +32,6 @@ def find_A_elems(xl, yl, c, xr, yr, zr, bx):
     dw = np.array([[bx, by, bz], [xl, yl, -c], [0, -zr, yr]])
     dw = np.linalg.det(dw)
     print(f'dw = {dw}')
-    
-    by = 0
-    bz = 0
-    w = 0
 
     A = -yr*math.sin(w) + zr*math.cos(w)
     B = xr*math.sin(w)
@@ -35,8 +39,6 @@ def find_A_elems(xl, yl, c, xr, yr, zr, bx):
     dphi = np.array([[bx, by, bz], [xl, yl, -c], [A, B, C]])
     dphi = np.linalg.det(dphi)
     print(f'dphi = {dphi}')
-
-    phi = 0
 
     D = -yr*math.cos(w)*math.cos(phi) - zr*math.sin(w)*math.cos(phi)
     E = xr*math.cos(w)*math.cos(phi) - zr*math.sin(phi)
@@ -135,8 +137,8 @@ if __name__=="__main__":
         correction_right[idx][0] = round(xr, 3)
         correction_right[idx][1] = round(yr, 3)
         idx += 1
-    print(f'Total Correction Left: \n {correction_left}\n')
-    print(f'Total Correction Right: \n {correction_right}\n')
+    # print(f'Total Correction Left: \n {correction_left}\n')
+    # print(f'Total Correction Right: \n {correction_right}\n')
     idx = 0
 
     # A_matrix = np.zeros(shape=(len(xf),5))
@@ -148,3 +150,24 @@ if __name__=="__main__":
     #     A_matrix[idx][3] = dphi
     #     A_matrix[idx][4] = dkappa
     # print(f'A matrix = {A_matrix}')
+
+###################################################
+    # Example
+    c = 152.15
+    bx = 92.000
+    xl = np.array([106.399, 18.989, 70.964, -0.931, 9.278, 98.681])
+    yl = np.array([90.426, 93.365, 4.907, -7.284, -92.926, -62.769])
+    xr = np.array([24.848, -59.653, -15.581, -85.407, -78.81, 8.492])
+    yr = np.array([81.824, 88.138, -0.387, -8.351, -92.62, -68.873])
+
+    A_matrix = np.zeros(shape=(len(xl),5))
+    for i in range(len(xl)):
+        dby, dbz, dw, dphi, dkappa = find_A_elems(xl[i], yl[i], c, xr[i], yr[i], -c)
+        A_matrix[idx][0] = dby
+        A_matrix[idx][1] = dbz
+        A_matrix[idx][2] = dw
+        A_matrix[idx][3] = dphi
+        A_matrix[idx][4] = dkappa
+        idx += 1
+    print(f'A matrix = {A_matrix}')
+    
