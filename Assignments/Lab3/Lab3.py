@@ -11,6 +11,7 @@ import numpy as np
 from numpy.linalg import inv, det
 import math
 import matplotlib.pyplot as plt
+from scipy.spatial.transform import Rotation as R
 import preLab3 as pre_lab_3
 
 def correct_images(xc1, yc1, xc2, yc2):
@@ -24,7 +25,7 @@ def correct_images(xc1, yc1, xc2, yc2):
         correction_left[idx][1] = round(yl, 3)
 
         # correct images 2
-        xr, yr = pre_lab_3.get_left(xc2[i], yc2[i])
+        xr, yr = pre_lab_3.get_right(xc2[i], yc2[i])
         correction_right[idx][0] = round(xr, 3)
         correction_right[idx][1] = round(yr, 3)
         idx += 1
@@ -33,6 +34,17 @@ def correct_images(xc1, yc1, xc2, yc2):
     # print(f'Total Correction Right: \n {correction_right}\n')
     return correction_left, correction_right
 
+def transform_images(xr, yr, c, omega, phi, kappa):
+    rot_mat = (R.from_euler('zyx', [kappa, phi, omega], degrees=True)).as_matrix()
+    xr_t = np.zeros(len(xr))
+    yr_t = np.zeros(len(yr))
+    zr_t = np.zeros(len(xr))
+
+    for i in range(len(xr)):
+        vr = [xr[i], yr[i], -c]
+        xr_t[i], yr_t[i], zr_t[i] = np.dot(rot_mat, vr)
+
+    return xr_t, yr_t, zr_t
 
 def find_A_elems(xl, yl, c, xr, yr, zr, bx, by, bz, omega, phi, kappa):
 
@@ -69,40 +81,36 @@ def find_A_elems(xl, yl, c, xr, yr, zr, bx, by, bz, omega, phi, kappa):
 
     return dby, dbz, dw, dphi, dkappa
 
-def find_misclosure(xl, yl, c, xr, yr, bx, by, bz):
-    zr = -c
-
+def find_misclosure(xl, yl, c, xr, yr, zr, bx, by, bz):
     w = np.array([[bx, by, bz], [xl, yl, -c], [xr, yr, zr]])
     w = det(w)
 
     return w
 
-def find_delta(xl, yl, c, xr, yr, bx, by, bz, omega, phi, kappa):
+def find_delta(xl, yl, c, xr, yr, zr, bx, by, bz, omega, phi, kappa):
     A_matrix = np.zeros(shape=(len(xl),5))
     w = np.zeros(shape=(len(xl), 1))
     idx = 0
     for i in range(len(xl)):
-        dby, dbz, dw, dphi, dkappa = find_A_elems(xl[i], yl[i], c, xr[i], yr[i], -c, bx, by, bz, omega, phi, kappa)
+        dby, dbz, dw, dphi, dkappa = find_A_elems(xl[i], yl[i], c, xr[i], yr[i], zr[i], bx, by, bz, omega, phi, kappa)
         A_matrix[idx][0] = dby
         A_matrix[idx][1] = dbz
         A_matrix[idx][2] = dw
         A_matrix[idx][3] = dphi
         A_matrix[idx][4] = dkappa
-        w[idx] = find_misclosure(xl[i], yl[i], c, xr[i], yr[i], bx, by=0, bz=0)
+        w[idx] = find_misclosure(xl[i], yl[i], c, xr[i], yr[i], zr[i], bx, by, bz)
 
         idx += 1
+
     A_matrix_trans = np.transpose(A_matrix)
     by, bz, omega, phi, kappa = -np.dot(np.dot(inv(np.dot(A_matrix_trans, A_matrix)), A_matrix_trans), w)
-    
+    # by, bz, omega, phi, kappa = -np.dot(inv(np.dot(A_matrix_trans, A_matrix)), np.dot(A_matrix_trans, w))
     return by[0], bz[0], omega[0], phi[0], kappa[0]
 
-def space_intersection(xl, yl, c, xr, yr, bx, by, bz):
-    zr = -c
+def space_intersection(xl, yl, c, xr, yr, zr, bx, by, bz):
     scale = (bx*zr - bz*xr) / (xl*zr - c*xr)
     mu = (-bx*c - bz*xl) / (xl*zr + c*xr)
-    print(f'scale for left: {scale}')
-    print(f'scale for right: {mu}')
-
+    
     model_Xl = scale*xl
     model_Yl = scale*yl
     model_Zl = -scale*c
@@ -114,10 +122,9 @@ def space_intersection(xl, yl, c, xr, yr, bx, by, bz):
     model_L = np.transpose(np.array([model_Xl, (model_Yl + model_Yr)/2, model_Zl]))
     model_R = np.transpose(np.array([model_Xr, (model_Yl + model_Yr)/2, model_Zr]))
 
-    # print(f'Model L:\n {model_L}')
-    # print(f'Model R:\n {model_R}')
+    
     pY = model_Yr - model_Yl
-    # print(f'y-parallax values: {pY}')
+    
 
     return model_L, model_R, pY, scale, mu
 
@@ -149,8 +156,7 @@ if __name__=="__main__":
     xc2 = [1411, 9416, 2275, 11129, 4160, 10137]
     yc2 = [-2081, -1167, -10787, -10048, -17085, -17690]
 
-    # bx
-    bx = 92.000
+    c = 153.358 # mm
 
     left_images, right_images = correct_images(xc1, yc1, xc2, yc2)
     xl = left_images[:,0]
@@ -158,37 +164,64 @@ if __name__=="__main__":
     xr = right_images[:,0]
     yr = right_images[:,1]
 
-    # idx = 0
+    bx = 92.000
+    by = 0
+    bz = 0
+    omega = 0
+    phi = 0
+    kappa = 0
 
-    # A_matrix = np.zeros(shape=(len(xf),5))
-    # for i in range(len(xf)):
-    #     dby, dbz, dw, dphi, dkappa = find_A_elems(0, 0, c, xl[i], yl[i], c, bx)
-    #     A_matrix[idx][0] = dby
-    #     A_matrix[idx][1] = dbz
-    #     A_matrix[idx][2] = dw
-    #     A_matrix[idx][3] = dphi
-    #     A_matrix[idx][4] = dkappa
-    # print(f'A matrix = {A_matrix}')
+    iter = 1
+    # xr_t, yr_t, zr_t = transform_images(xr, yr, c, omega, phi, kappa)
+    # by, bz, omega, phi, kappa = find_delta(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz, omega, phi, kappa)
+    # for i in range(2):
+    #     iter += 1
+    #     xr_t, yr_t, zr_t = transform_images(xr, yr, c, omega, phi, kappa)
+    #     by, bz, omega, phi, kappa = find_delta(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz, omega, phi, kappa)
+    # print(f'Number of iterations = {iter}')
+    # print(f'delta:\n {np.array([by, bz, omega, phi, kappa])}')
+
+    # model_L, model_R, pY, scale_left, scale_right = space_intersection(xl, yl, c, xr, yr, zr_t, bx, by, bz)
+
+    # print(f'Model L:\n {model_L}')
+    # print(f'Model R:\n {model_R}')
+
+    # print(f'y-parallax values: {pY}')
+
+    # plot_scale(scale_left, scale_right)
 
 ###################################################
     # Example
-    c = 152.15
-    bx = 92.000
     xl = np.array([106.399, 18.989, 70.964, -0.931, 9.278, 98.681])
     yl = np.array([90.426, 93.365, 4.907, -7.284, -92.926, -62.769])
     xr = np.array([24.848, -59.653, -15.581, -85.407, -78.81, 8.492])
     yr = np.array([81.824, 88.138, -0.387, -8.351, -92.62, -68.873])
 
-    # dby, dbz, dw, dphi, dkappa = find_A_elems(xl[0], yl[0], c, xr[0], yr[0], -c, bx, by=0, bz=0, omega=0, phi=0, kappa=0)
-    iter = 1
-    by, bz, omega, phi, kappa = find_delta(xl, yl, c, xr, yr, bx, by=0, bz=0, omega=0, phi=0, kappa=0)
-    for i in range(3):
-        iter += 1
-        by, bz, omega, phi, kappa = find_delta(xl, yl, c, xr, yr, bx, by, bz, omega, phi, kappa)
-    # print(f'Number of iterations = {iter}')
-    # print(f'delta:\n {np.array([by, bz, omega, phi, kappa])}')
+    # initial params
+    c = 152.15
+    bx = 92.000
+    by = 0
+    bz = 0
+    omega = 0
+    phi = 0
+    kappa = 0
 
-    model_L, model_R, pY, scale_left, scale_right = space_intersection(xl, yl, c, xr, yr, bx, by, bz)
+    iter = 1
+    xr_t, yr_t, zr_t = transform_images(xr, yr, c, omega, phi, kappa)
+    by, bz, omega, phi, kappa = find_delta(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz, omega, phi, kappa)
+    for i in range(2):
+        iter += 1
+        xr_t, yr_t, zr_t = transform_images(xr, yr, c, omega, phi, kappa)
+        by, bz, omega, phi, kappa = find_delta(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz, omega, phi, kappa)
+    print(f'Number of iterations = {iter}')
+    print(f'delta:\n {np.array([by, bz, omega, phi, kappa])}')
+
+    model_L, model_R, pY, scale_left, scale_right = space_intersection(xl, yl, c, xr, yr, zr_t, bx, by, bz)
+
+    print(f'Model L:\n {model_L}')
+    print(f'Model R:\n {model_R}')
+
+    print(f'y-parallax values: {pY}')
 
     plot_scale(scale_left, scale_right)
 
