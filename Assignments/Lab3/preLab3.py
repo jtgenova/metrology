@@ -122,7 +122,7 @@ if __name__=="__main__":
 
     for i in range(len(xc1)):
         # get fiducial coordinates
-        xf, yf = get_fiducial(xc1[i], yc1[i], A_mat, delta_X, delta_Y)
+        xf, yf = get_fiducial(xc1[i], yc1[i], A_mat1, delta_X1, delta_Y1)
         fid_coords[idx][0] = xf
         fid_coords[idx][1] = yf
 
