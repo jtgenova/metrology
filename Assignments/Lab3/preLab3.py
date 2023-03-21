@@ -19,8 +19,41 @@ Correct images before Lab 3 Tasks
 import numpy as np
 import math
 
-def get_fiducial(xc, yc, A_mat, x_delta, y_delta):
+ # Given from calibration certificate
+focal_length = 153.358 # mm
+principal_point_offset = [-0.006, 0.006] # [xp, yp] mm
+radial_lens_distortion = [0.8878e-4, -0.1528e-7, 0.5256e-12] # [K0, K1, K2]
+decentering_distortion = [0.1346e-06, 0.1224e-07] # [P1, P2]
+c = focal_length # speed of light
+# Given from handout
+H = 1860/1000 # [km] elevation
+h = 1100/1000 # [km] ground elevation
+scale_number = 5000
+image_size = 9 # in square
+k_atmos = ((2410*H)/(H**2 -6*H + 250) - (2410*h)/(h**2 - 6*h + 250)*(h/H))*1e-6
 
+# bx
+bx = 92.000
+
+# Image 1
+delta_X1 = -122.01704301790505
+delta_Y1 = 123.53429666924897
+A1 = 0.011899426266928175
+B1 = 0.000000299767744395384
+C1 = -0.00000134050132901044
+D1 = 0.011901264695956251
+A_mat1 = np.array([[A1, B1], [C1, D1]])
+
+# Image 2
+delta_X2 = -122.19211044565897
+delta_Y2 = 123.51804729053579
+A2 = 0.011900088285313318
+B2 = -8.456447779614914e-06
+C2 = 7.403491422692827e-06
+D2 = 0.011901033060072988
+A_mat2 = np.array([[A2, B2], [C2, D2]])
+
+def get_fiducial(xc, yc, A_mat, x_delta, y_delta):
     delta_xy = np.array([[x_delta], [y_delta]])
     temp_c = np.array([[xc], [yc]])
     xf, yf = np.dot(A_mat, temp_c) + delta_xy
@@ -57,31 +90,23 @@ def get_total(xf, yf, pp, K, P, c, k_atmos):
     y_total = y_pp + y_rad + y_dec + y_atmos
     return x_total, y_total
 
-if __name__=="__main__":
+def get_left(xc, yc):
+    xf, yf = get_fiducial(xc, yc, A_mat1, delta_X1, delta_Y1)
+    xl, yl = get_total(xf, yf, principal_point_offset, radial_lens_distortion, decentering_distortion, focal_length, k_atmos)
+    return xl, yl
 
-    # Given from calibration certificate
-    focal_length = 153.358 # mm
-    principal_point_offset = [-0.006, 0.006] # [xp, yp] mm
-    radial_lens_distortion = [0.8878e-4, -0.1528e-7, 0.5256e-12] # [K0, K1, K2]
-    decentering_distortion = [0.1346e-06, 0.1224e-07] # [P1, P2]
-    # Given from handout
-    H = 1860/1000 # [km] elevation
-    h = 1100/1000 # [km] ground elevation
-    scale_number = 5000
-    image_size = 9 # in square
-    k_atmos = ((2410*H)/(H**2 -6*H + 250) - (2410*h)/(h**2 - 6*h + 250)*(h/H))*1e-6
-   
-    # Image 1
-    delta_X = -122.01704301790505
-    delta_Y = 123.53429666924897
-    A = 0.011899426266928175
-    B = 0.000000299767744395384
-    C = -0.00000134050132901044
-    D = 0.011901264695956251
-    A_mat = np.array([[A, B], [C, D]])
+def get_right(xc, yc):
+    xf, yf = get_fiducial(xc, yc, A_mat2, delta_X2, delta_Y2)
+    xr, yr = get_total(xf, yf, principal_point_offset, radial_lens_distortion, decentering_distortion, focal_length, k_atmos)
+    return xr, yr
+
+if __name__=="__main__":
 
     xc1 = [9460, 17400, 10059, 19158, 11844, 17842]
     yc1 = [-2292, -1661, -10883, -10412, -17253, -18028]
+
+    xc2 = [1411, 9416, 2275, 11129, 4160, 10137]
+    yc2 = [-2081, -1167, -10787, -10048, -17085, -17690]
 
     idx = 0
     fid_coords = np.zeros(shape=(len(xc1),2))
@@ -135,6 +160,9 @@ if __name__=="__main__":
         correction[idx][0] = x_total
         correction[idx][1] = y_total
 
+        
+        xl, yl = get_left(xc1[i], yc1[i])
+        xr, yr = get_right(xc2[i], yc2[i])
 
         idx += 1
 
@@ -147,4 +175,4 @@ if __name__=="__main__":
     # print(f'Atmospheric Refration (delta): \n {atmos_correction}\n')
     # print(f'Atmospheric Refration Correction: \n {atmos_corrected}\n')
     # print(f'Total Correction: \n {total_correction}\n')
-    print(f'Total Correction: \n {correction}\n')
+    # print(f'Total Correction: \n {correction}\n')
