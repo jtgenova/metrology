@@ -12,56 +12,73 @@ import math
 import matplotlib.pyplot as plt
 import preLab3 as pre_lab_3
 
-def find_A_elems(xl, yl, c, xr, yr, zr):
-
-    bx = 92.0000
-    by = 5.0455
-    bz = 2.1725
-    w = 0.4392
-    phi = 1.5080
-    kappa = 3.1575
+def find_A_elems(xl, yl, c, xr, yr, zr, bx, by, bz, omega, phi, kappa):
 
     dby = np.array([[0, 1, 0], [xl, yl, -c], [xr, yr, zr]])
     dby = np.linalg.det(dby)
-    print(f'dby = {dby}')
+    # print(f'dby = {dby}')
 
-    dbz = np.array([[0, 0, 1], [xl, xr, -c], [xr, yr, zr]])
+    dbz = np.array([[0, 0, 1], [xl, yl, -c], [xr, yl, zr]])
     dbz = np.linalg.det(dbz)
-    print(f'dbz = {dbz}')
+    # print(f'dbz = {dbz}')
 
     dw = np.array([[bx, by, bz], [xl, yl, -c], [0, -zr, yr]])
     dw = np.linalg.det(dw)
-    print(f'dw = {dw}')
+    # print(f'dw = {dw}')
 
-    A = -yr*math.sin(w) + zr*math.cos(w)
-    B = xr*math.sin(w)
-    C = -xr*math.cos(w)
+    A = -yr*math.sin(omega) + zr*math.cos(omega)
+    B = xr*math.sin(omega)
+    C = -xr*math.cos(omega)
     dphi = np.array([[bx, by, bz], [xl, yl, -c], [A, B, C]])
     dphi = np.linalg.det(dphi)
-    print(f'dphi = {dphi}')
+    # print(f'dphi = {dphi}')
 
-    D = -yr*math.cos(w)*math.cos(phi) - zr*math.sin(w)*math.cos(phi)
-    E = xr*math.cos(w)*math.cos(phi) - zr*math.sin(phi)
-    F = xr*math.sin(w)*math.cos(phi) + yr*math.sin(phi)
+    D = -yr*math.cos(omega)*math.cos(phi) - zr*math.sin(omega)*math.cos(phi)
+    E = xr*math.cos(omega)*math.cos(phi) - zr*math.sin(phi)
+    F = xr*math.sin(omega)*math.cos(phi) + yr*math.sin(phi)
     dkappa = np.array([[bx, by, bz], [xl, yl, -c], [D, E, F]])
     dkappa = np.linalg.det(dkappa)
-    print(f'dkappa = {dkappa}')
+    # print(f'dkappa = {dkappa}')
 
     return dby, dbz, dw, dphi, dkappa
 
-def space_intersection(B, L, R):
-    bx = B[0]
-    by = B[1]
-    bz = B[2]
-    xl = L[0]
-    yl = L[1]
-    c = L[2]
-    xr = R[0]
-    yr = R[1]
-    zr = R[2]
+def find_misclosure(xl, yl, c, xr, yr, bx, by, bz):
+    zr = -c
+
+    w = np.array([[bx, by, bz], [xl, yl, -c], [xr, yr, zr]])
+    w = np.linalg.det(w)
+
+    return w
+
+def find_delta(xl, yl, c, xr, yr, bx, by, bz, omega, phi, kappa):
+    A_matrix = np.zeros(shape=(len(xl),5))
+    w = np.zeros(shape=(len(xl), 1))
+    idx = 0
+    for i in range(len(xl)):
+        dby, dbz, dw, dphi, dkappa = find_A_elems(xl[i], yl[i], c, xr[i], yr[i], -c, bx, by, bz, omega, phi, kappa)
+        A_matrix[idx][0] = dby
+        A_matrix[idx][1] = dbz
+        A_matrix[idx][2] = dw
+        A_matrix[idx][3] = dphi
+        A_matrix[idx][4] = dkappa
+        w[idx] = find_misclosure(xl[i], yl[i], c, xr[i], yr[i], bx, by=0, bz=0)
+
+        idx += 1
+    A_matrix_trans = np.transpose(A_matrix)
+    delta = -np.dot(np.dot(np.linalg.inv(np.dot(A_matrix_trans, A_matrix)), A_matrix_trans), w)
+    # print(f'A matrix = {A_matrix}')
+    # print(w)
+    print(delta)
+    return delta
+
+
+
+def space_intersection(xl, yl, c, xr, yr, zr, bx, by, bz):
 
     scale = (bx*zr - bz*xr) / (xl*zr - c*xr)
     mu = (-bx*c - bz*xl) / (xl*zr + c*xr)
+    # print(f'scale for left: {scale}')
+    # print(f'scale for right: {mu}')
 
     model_Xl = scale*xl
     model_Yl = scale*yl
@@ -74,7 +91,15 @@ def space_intersection(B, L, R):
     model_L = np.transpose(np.array([model_Xl, (model_Yl + model_Yr)/2, model_Zl]))
     model_R = np.transpose(np.array([model_Xr, (model_Yl + model_Yr)/2, model_Zr]))
 
+    # print(f'Model L: {model_L}')
+    # print(f'Model R: {model_R}')
     pY = model_Yr - model_Yl
+    # print(f'y-parallax values: {pY}')
+
+    # return model_L, model_R, pY
+
+# def model_space(xl, yl, c, xr, yr, zr, bx, by, bz):
+
 
 ##############################################################################################################################################################
 if __name__=="__main__":
@@ -160,14 +185,31 @@ if __name__=="__main__":
     xr = np.array([24.848, -59.653, -15.581, -85.407, -78.81, 8.492])
     yr = np.array([81.824, 88.138, -0.387, -8.351, -92.62, -68.873])
 
-    A_matrix = np.zeros(shape=(len(xl),5))
-    for i in range(len(xl)):
-        dby, dbz, dw, dphi, dkappa = find_A_elems(xl[i], yl[i], c, xr[i], yr[i], -c)
-        A_matrix[idx][0] = dby
-        A_matrix[idx][1] = dbz
-        A_matrix[idx][2] = dw
-        A_matrix[idx][3] = dphi
-        A_matrix[idx][4] = dkappa
-        idx += 1
-    print(f'A matrix = {A_matrix}')
+    # estimated params
+    by = 0
+    bz = 0
+    omega = 0
+    phi = 0
+    kappa = 0
+
+    iter = 1
+    print(f'Number of iterations = {iter}')
+    delta = find_delta(xl, yl, c, xr, yr, bx, by, bz, omega, phi, kappa)
+    by = delta[0][0]
+    bz = delta[1][0]
+    omega = delta[2][0]
+    phi = delta[3][0]
+    kappa = delta[4][0] 
+    for i in range(3):
+        iter += 1
+        print(f'Number of iterations = {iter}')
+        delta = find_delta(xl, yl, c, xr, yr, bx, by, bz, omega, phi, kappa)
+   
+    by = delta[0][0]
+    bz = delta[1][0]
+    omega = delta[2][0]
+    phi = delta[3][0]
+    kappa = delta[4][0]    
+    space_intersection(xl, yl, c, xr, yr, -c, bx, by, bz)
+        
     
