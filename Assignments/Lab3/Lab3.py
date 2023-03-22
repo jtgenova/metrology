@@ -44,7 +44,6 @@ def transform_images(xr, yr, c, omega, phi, kappa):
     xr_t = np.zeros(len(xr))
     yr_t = np.zeros(len(yr))
     zr_t = np.zeros(len(xr))
-
     for i in range(len(xr)):
         vr = np.array([xr[i], yr[i], -c])
         xr_t[i], yr_t[i], zr_t[i] = np.dot(rot_mat.T, vr.T)
@@ -106,9 +105,14 @@ def find_delta(xl, yl, c, xr, yr, zr, bx, by, bz, omega, phi, kappa):
 
         idx += 1
     A_matrix_trans = np.transpose(A_matrix)
-    by, bz, omega, phi, kappa = -np.dot(np.dot(inv(np.dot(A_matrix_trans, A_matrix)), A_matrix_trans), w)
+    by_e, bz_e, omega_e, phi_e, kappa_e = -np.dot(np.dot(inv(np.dot(A_matrix_trans, A_matrix)), A_matrix_trans), w)
+    by = by + by_e[0]
+    bz = bz + bz_e[0]
+    omega = omega + omega_e[0]
+    phi = phi + phi_e[0]
+    kappa = kappa + kappa_e[0]
     
-    return by[0], bz[0], omega[0], phi[0], kappa[0]
+    return by, bz, omega, phi, kappa
 
 def space_intersection(xl, yl, c, xr, yr, zr, bx, by, bz):
     scale = (bx*zr - bz*xr) / (xl*zr - c*xr)
@@ -211,13 +215,13 @@ if __name__=="__main__":
     iter = 1
     xr_t, yr_t, zr_t = transform_images(xr, yr, c, omega, phi, kappa)
     by, bz, omega, phi, kappa = find_delta(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz, omega, phi, kappa)
-    # print(f'Number of iterations = {iter}')
+    print(f'Number of iterations = {iter}')
     # print(f'delta:\n {np.array([by, bz, omega, phi, kappa])}')
     for i in range(2):
         iter += 1
         xr_t, yr_t, zr_t = transform_images(xr, yr, c, omega, phi, kappa)
         by, bz, omega, phi, kappa = find_delta(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz, omega, phi, kappa)
-        # print(f'Number of iterations = {iter}')
+        print(f'Number of iterations = {iter}')
         print(f'delta:\n {np.array([by, bz, omega, phi, kappa])}')
     
     # model_L, model_R, pY, scale_left, scale_right = space_intersection(xl, yl, c, xr, yr, zr_t, bx, by, bz)
