@@ -10,8 +10,8 @@ Deadline: March 22, 2023 10:00 AM
 import numpy as np
 from numpy.linalg import inv, det
 import math
+from math import sin, cos
 import matplotlib.pyplot as plt
-from scipy.spatial.transform import Rotation as R
 import preLab3 as pre_lab_3
 
 def correct_images(xc1, yc1, xc2, yc2):
@@ -35,19 +35,22 @@ def correct_images(xc1, yc1, xc2, yc2):
     return correction_left, correction_right
 
 def transform_images(xr, yr, c, omega, phi, kappa):
-    rot_mat = (R.from_euler('zyx', [kappa, phi, omega], degrees=True)).as_matrix()
+    rot_mat = np.array([
+        [cos(phi)*cos(kappa), cos(omega)*sin(kappa)+sin(omega)*sin(phi)*cos(kappa), sin(omega)*sin(kappa)-cos(omega)*sin(phi)*cos(kappa)],
+        [-cos(phi)*sin(kappa), cos(omega)*cos(kappa)-sin(omega)*sin(phi)*sin(kappa), sin(omega)*cos(kappa)+cos(omega)*sin(phi)*sin(kappa)],
+        [sin(phi), -sin(omega)*cos(phi), cos(omega)*cos(phi)]
+    ])
+        
     xr_t = np.zeros(len(xr))
     yr_t = np.zeros(len(yr))
     zr_t = np.zeros(len(xr))
 
     for i in range(len(xr)):
-        vr = [xr[i], yr[i], -c]
-        xr_t[i], yr_t[i], zr_t[i] = np.dot(rot_mat, vr)
-
+        vr = np.array([xr[i], yr[i], -c])
+        xr_t[i], yr_t[i], zr_t[i] = np.dot(rot_mat.T, vr.T)
     return xr_t, yr_t, zr_t
 
 def find_A_elems(xl, yl, c, xr, yr, zr, bx, by, bz, omega, phi, kappa):
-
     dby = np.array([[0, 1, 0], [xl, yl, -c], [xr, yr, zr]])
     # print(f'dby:\n {dby}')
     dby = det(dby)
@@ -63,17 +66,17 @@ def find_A_elems(xl, yl, c, xr, yr, zr, bx, by, bz, omega, phi, kappa):
     dw = det(dw)
     # print(f'dw = {dw}')
 
-    A = -yr*math.sin(omega) + zr*math.cos(omega)
-    B = xr*math.sin(omega)
-    C = -xr*math.cos(omega)
+    A = -yr*sin(omega) + zr*cos(omega)
+    B = xr*sin(omega)
+    C = -xr*cos(omega)
     dphi = np.array([[bx, by, bz], [xl, yl, -c], [A, B, C]])
     # print(f'dphi:\n {dphi}')
     dphi = det(dphi)
     # print(f'dphi = {dphi}')
 
-    D = -yr*math.cos(omega)*math.cos(phi) - zr*math.sin(omega)*math.cos(phi)
-    E = xr*math.cos(omega)*math.cos(phi) - zr*math.sin(phi)
-    F = xr*math.sin(omega)*math.cos(phi) + yr*math.sin(phi)
+    D = -yr*cos(omega)*cos(phi) - zr*sin(omega)*cos(phi)
+    E = xr*cos(omega)*cos(phi) - zr*sin(phi)
+    F = xr*sin(omega)*cos(phi) + yr*sin(phi)
     dkappa = np.array([[bx, by, bz], [xl, yl, -c], [D, E, F]])
     # print(f'dkappa:\n {dkappa}')
     dkappa = det(dkappa)
@@ -98,13 +101,13 @@ def find_delta(xl, yl, c, xr, yr, zr, bx, by, bz, omega, phi, kappa):
         A_matrix[idx][2] = dw
         A_matrix[idx][3] = dphi
         A_matrix[idx][4] = dkappa
+        
         w[idx] = find_misclosure(xl[i], yl[i], c, xr[i], yr[i], zr[i], bx, by, bz)
 
         idx += 1
-
     A_matrix_trans = np.transpose(A_matrix)
     by, bz, omega, phi, kappa = -np.dot(np.dot(inv(np.dot(A_matrix_trans, A_matrix)), A_matrix_trans), w)
-    # by, bz, omega, phi, kappa = -np.dot(inv(np.dot(A_matrix_trans, A_matrix)), np.dot(A_matrix_trans, w))
+    
     return by[0], bz[0], omega[0], phi[0], kappa[0]
 
 def space_intersection(xl, yl, c, xr, yr, zr, bx, by, bz):
@@ -121,11 +124,9 @@ def space_intersection(xl, yl, c, xr, yr, zr, bx, by, bz):
 
     model_L = np.transpose(np.array([model_Xl, (model_Yl + model_Yr)/2, model_Zl]))
     model_R = np.transpose(np.array([model_Xr, (model_Yl + model_Yr)/2, model_Zr]))
-
     
     pY = model_Yr - model_Yl
     
-
     return model_L, model_R, pY, scale, mu
 
 def plot_scale(scale_left, scale_right):
@@ -148,30 +149,30 @@ def plot_scale(scale_left, scale_right):
 ##############################################################################################################################################################
 if __name__=="__main__":
 
-    # Image 1
-    xc1 = [9460, 17400, 10059, 19158, 11844, 17842]
-    yc1 = [-2292, -1661, -10883, -10412, -17253, -18028]
+    # # Image 1
+    # xc1 = [9460, 17400, 10059, 19158, 11844, 17842]
+    # yc1 = [-2292, -1661, -10883, -10412, -17253, -18028]
 
-    # Image 2
-    xc2 = [1411, 9416, 2275, 11129, 4160, 10137]
-    yc2 = [-2081, -1167, -10787, -10048, -17085, -17690]
+    # # Image 2
+    # xc2 = [1411, 9416, 2275, 11129, 4160, 10137]
+    # yc2 = [-2081, -1167, -10787, -10048, -17085, -17690]
 
-    c = 153.358 # mm
+    # c = 153.358 # mm
 
-    left_images, right_images = correct_images(xc1, yc1, xc2, yc2)
-    xl = left_images[:,0]
-    yl = left_images[:,1]
-    xr = right_images[:,0]
-    yr = right_images[:,1]
+    # left_images, right_images = correct_images(xc1, yc1, xc2, yc2)
+    # xl = left_images[:,0]
+    # yl = left_images[:,1]
+    # xr = right_images[:,0]
+    # yr = right_images[:,1]
 
-    bx = 92.000
-    by = 0
-    bz = 0
-    omega = 0
-    phi = 0
-    kappa = 0
+    # bx = 92.000
+    # by = 0
+    # bz = 0
+    # omega = 0
+    # phi = 0
+    # kappa = 0
 
-    iter = 1
+    # iter = 1
     # xr_t, yr_t, zr_t = transform_images(xr, yr, c, omega, phi, kappa)
     # by, bz, omega, phi, kappa = find_delta(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz, omega, phi, kappa)
     # for i in range(2):
@@ -197,6 +198,7 @@ if __name__=="__main__":
     xr = np.array([24.848, -59.653, -15.581, -85.407, -78.81, 8.492])
     yr = np.array([81.824, 88.138, -0.387, -8.351, -92.62, -68.873])
 
+
     # initial params
     c = 152.15
     bx = 92.000
@@ -209,21 +211,23 @@ if __name__=="__main__":
     iter = 1
     xr_t, yr_t, zr_t = transform_images(xr, yr, c, omega, phi, kappa)
     by, bz, omega, phi, kappa = find_delta(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz, omega, phi, kappa)
+    # print(f'Number of iterations = {iter}')
+    # print(f'delta:\n {np.array([by, bz, omega, phi, kappa])}')
     for i in range(2):
         iter += 1
         xr_t, yr_t, zr_t = transform_images(xr, yr, c, omega, phi, kappa)
         by, bz, omega, phi, kappa = find_delta(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz, omega, phi, kappa)
-    print(f'Number of iterations = {iter}')
-    print(f'delta:\n {np.array([by, bz, omega, phi, kappa])}')
+        # print(f'Number of iterations = {iter}')
+        print(f'delta:\n {np.array([by, bz, omega, phi, kappa])}')
+    
+    # model_L, model_R, pY, scale_left, scale_right = space_intersection(xl, yl, c, xr, yr, zr_t, bx, by, bz)
 
-    model_L, model_R, pY, scale_left, scale_right = space_intersection(xl, yl, c, xr, yr, zr_t, bx, by, bz)
+    # print(f'Model L:\n {model_L}')
+    # print(f'Model R:\n {model_R}')
 
-    print(f'Model L:\n {model_L}')
-    print(f'Model R:\n {model_R}')
+    # print(f'y-parallax values: {pY}')
 
-    print(f'y-parallax values: {pY}')
-
-    plot_scale(scale_left, scale_right)
+    # plot_scale(scale_left, scale_right)
 
         
     
