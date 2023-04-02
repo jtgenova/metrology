@@ -54,16 +54,18 @@ def partial_d(Xm, Ym, Zm, W, P, K, scale, M):
     dXdty = 0
     dXdtz = 0
     dX = [dXdW, dXdP, dXdK, dXdtx, dXdty, dXdtz, dXdscale]
+    # print(dX)
 
     # partial derivatives of Y
     dYdW = scale*Ym*(-sW*cK - sW*sP*sK) + scale*Zm*(cW*cK - sW*sP*sK)
-    dYdP = scale*Xm*sW*sK - scale*Ym*sW*cP*sK + scale*Zm*cW*cP*sK
+    dYdP = scale*Xm*sP*sK - scale*Ym*sW*cP*sK + scale*Zm*cW*cP*sK
     dYdK = -scale*Xm*cP*cK + scale*Ym*(-cW*sK - sW*sP*cK) + scale*Zm*(-sW*sK + cW*sP*cK)
     dYdscale = Xm*m21 + Ym*m22 + Zm*m23
     dYdtx = 0
     dYdty = 1
     dYdtz = 0
     dY = [dYdW, dYdP, dYdK, dYdtx, dYdty, dYdtz, dYdscale]
+    # print(dY)
 
     # partial derivatives of Z
     dZdW = -scale*Ym*cW*cP - scale*Zm*sW*cP
@@ -74,10 +76,11 @@ def partial_d(Xm, Ym, Zm, W, P, K, scale, M):
     dZdty = 0
     dZdtz = 1
     dZ = [dZdW, dZdP, dZdK, dZdtx, dZdty, dZdtz, dZdscale]
+    # print(dZ)
 
     return dX, dY, dZ
 
-def misclosure(Xm, Ym, Zm, tx, ty, tz, scale, M):
+def misclosure(Xm, Ym, Zm, tx, ty, tz, scale, M, Xg, Yg, Zg):
     m11 = M[0][0]
     m12 = M[0][1]
     m13 = M[0][2]
@@ -88,15 +91,14 @@ def misclosure(Xm, Ym, Zm, tx, ty, tz, scale, M):
     m32 = M[2][1]
     m33 = M[2][2]
 
-    Xo, Yo, Zo = object_space(scale, M, Xm, Ym, Zm, tx, ty, tz)
+    wX = scale*(m11*Xm + m12*Ym + m13*Zm) + tx - Xg
+    wY = scale*(m21*Xm + m22*Ym + m23*Zm) + ty - Yg
+    wZ = scale*(m31*Xm + m32*Ym + m33*Zm) + tz - Zg
 
-    wX = scale*(m11*Xm + m12*Ym + m13*Zm) + tx - Xo
-    wY = scale*(m21*Xm + m22*Ym + m23*Zm) + tx - Yo
-    wZ = scale*(m31*Xm + m32*Ym + m33*Zm) + tx - Zo
 
     return wX, wY, wZ
 
-def find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale):
+def find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale, Xg, Yg, Zg):
     M = rot_mat(W, P, K)
     size = len(Xm)
     A_mat = np.zeros(shape=(3*size, 7))
@@ -104,11 +106,21 @@ def find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale):
     idx = 0
     for i in range(size):
         A_mat[idx], A_mat[idx+1], A_mat[idx+2] = partial_d(Xm[i], Ym[i], Zm[i], W, P, K, scale, M)
-        w[idx], w[idx+1], w[idx+2] = misclosure(Xm[i], Ym[i], Zm[i], tx, ty, tz, scale, M)
+        w[idx], w[idx+1], w[idx+2] = misclosure(Xm[i], Ym[i], Zm[i], tx, ty, tz, scale, M, Xg[i], Yg[i], Zg[i])
         idx += 3
 
-    # delta = -np.dot(np.dot(inv(np.dot(A_mat.T, A_mat)), A_mat.T), w)
-    # print(delta)
+    # print(inv(np.dot(A_mat.T, A_mat)))
+    # print(w)
+    delta = -np.dot(np.dot(inv(np.dot(A_mat.T, A_mat)), A_mat.T), w)
+    W = W + delta[0]
+    P = P + delta[1]
+    K = K + delta[2]
+    tx = tx + delta[3]
+    ty = ty + delta[4]
+    tz = tz + delta[5]
+    scale = scale + delta[6]
+
+    return W, P, K, tx, ty, tz, scale
 
 def find_residuals(A_mat, delta, l_mat):
     n = len(l_mat)
@@ -150,16 +162,23 @@ if __name__=="__main__":
     Ym = [92.5787, 96.0258, 4.9657, -7.4078, -96.5329, -63.9177]
     Zm = [-155.7696, -156.4878, -154.1035, -154.8060, -158.0535, -154.9389]
 
+    Xg = [7350.27, 6717.22, 6869.09, 6316.06, 6172.84, 6905.26]
+    Yg = [4382.54, 4626.41, 3844.56, 3934.63, 3269.45, 3279.84]
+    Zg = [276.42, 280.05, 283.11, 283.03, 248.10, 266.47]
+
 
     # initial conditions
     W = 0
     P = 0
-    K = 90
+    K = 0
     tx = 0
     ty = 0
     tz = 0
-    scale = 0
+    scale = 1
 
-    find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale)
+    iters = 9
+    for i in range(iters):
+        W, P, K, tx, ty, tz, scale = find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale, Xg, Yg, Zg)
+        print(tx, ty, tz, math.degrees(W), math.degrees(P), math.degrees(K), scale)
 
 
