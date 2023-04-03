@@ -235,9 +235,16 @@ if __name__=="__main__":
     scale = 10
 
     # Task #1
-    iters = 3
+    iters = 10
+    done = False
     for i in range(iters):
+        W_old = W
         W, P, K, tx, ty, tz, scale, A_mat = find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale, Xg, Yg, Zg)
+        print(W, P, K, tx, ty, tz, scale)
+        if abs(W-W_old) < 1e-4:
+            print(f'Converged at {i+1} iterations!')
+            break
+    
     print(f'\ntx: {tx} m')
     print(f'ty: {ty} m')
     print(f'tz {tz} m')
@@ -245,6 +252,8 @@ if __name__=="__main__":
     print(f'phi: {math.degrees(P)} deg')
     print(f'kappa: {math.degrees(K)} deg')
     print(f'lambda: {scale}\n')
+
+    # print(f'A Matrix:\n {A_mat}')
     delta = np.array([W, P, K, tx, ty, tz, scale])
 
     # Task #2 - Convergence Criteria
