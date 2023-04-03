@@ -11,6 +11,7 @@ from numpy.linalg import inv, det
 import math
 from math import sin, cos
 import matplotlib.pyplot as plt
+import preLab4 as pre_lab_4
 
 def rot_mat(W, P, K):
     rot_mat = np.array([
@@ -20,12 +21,6 @@ def rot_mat(W, P, K):
     ])
 
     return rot_mat
-
-def object_space(scale, M, Xm, Ym, Zm, tx, ty, tz):
-    M_vec = np.array([[Xm], [Ym], [Zm]])
-    t_vec = np.array([[tx], [ty], [tz]])
-    Xo, Yo, Zo = scale*np.dot(M, M_vec) + t_vec
-    return Xo, Yo, Zo
 
 def partial_d(Xm, Ym, Zm, W, P, K, scale, M):
     sW = sin(W)
@@ -109,8 +104,6 @@ def find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale, Xg, Yg, Zg):
         w[idx], w[idx+1], w[idx+2] = misclosure(Xm[i], Ym[i], Zm[i], tx, ty, tz, scale, M, Xg[i], Yg[i], Zg[i])
         idx += 3
 
-    # print(inv(np.dot(A_mat.T, A_mat)))
-    # print(w)
     delta = -np.dot(np.dot(inv(np.dot(A_mat.T, A_mat)), A_mat.T), w)
     W = W + delta[0]
     P = P + delta[1]
@@ -120,16 +113,33 @@ def find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale, Xg, Yg, Zg):
     tz = tz + delta[5]
     scale = scale + delta[6]
 
-    return W, P, K, tx, ty, tz, scale
+    return round(W[0], 4),  round(P[0], 4), round(K[0], 4), round(tx[0], 4), round(ty[0], 4), round(tz[0], 4), round(scale[0], 4), A_mat
 
-def find_residuals(A_mat, delta, l_mat):
-    n = len(l_mat)
-    mat_size = 2*n
+def object_space(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale):
+    M = rot_mat(W, P, K)
+    coords = np.array([[Xm], [Ym], [Zm]])
+    t_vec = np.array([tx, ty, tz])
+    Xo, Yo, Zo = scale*np.dot(M, coords) + t_vec
+
+    return round(Xo[0], 4), round(Yo[0], 4), round(Zo[0], 4)
+
+def find_residuals(A_mat, Xg, Yg, Zg, delta):
+    n = len(Xg)
+    mat_size = 3*n
+    l_mat = np.zeros(shape=(len(Xg)*3, 1))
+    
+    idx = 0
+    for i in range(n):
+        l_mat[idx] = Xg[i]
+        l_mat[idx+1] = Yg[i]
+        l_mat[idx+2] = Zg[i]
+        idx += 3
     v = np.dot(A_mat, delta) - l_mat
     v_mat = np.zeros(shape=(n,3))
     idx = 0
     x_rms = 0
     y_rms = 0
+    z_rms = 0
 
     # calculate rms
     for i in range(0, mat_size, 3):
@@ -143,21 +153,70 @@ def find_residuals(A_mat, delta, l_mat):
     x_rms = math.sqrt((1/n)*x_rms)
     y_rms = math.sqrt((1/n)*y_rms)
     z_rms = math.sqrt((1/n)*z_rms)
-    
-    return x_rms, y_rms, z_rms
 
-def object_space_coords(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale):
+    print(f'vX: {v_mat[:,0]}')
+    print(f'vY: {v_mat[:,1]}')
+    print(f'vZ: {v_mat[:,2]}')
+    print(f'x_rms: {x_rms}')
+    print(f'y_rms: {y_rms}')
+    print(f'z_rms: {z_rms}')
+    
+
+    
+    # return x_rms, y_rms, z_rms
+
+def resid(Xg, Yg, Zg, Xo, Yo, Zo):
+    res_x = np.zeros(len(Xg))
+    res_y = np.zeros(len(Yg))
+    res_z = np.zeros(len(Zg))
+
+    x_rms = 0
+    y_rms = 0
+    z_rms = 0
+
+    for i in range(len(Xg)):
+        res_x[i] = round((Xo[i] - Xg[i]), 4)
+        res_y[i] = round((Yo[i] - Yg[i]), 4)
+        res_z[i] = round((Zo[i] - Zg[i]), 4)
+
+        x_rms = x_rms + res_x[i]**2
+        y_rms = y_rms + res_y[i]**2
+        z_rms = z_rms + res_z[i]**2
+
+    x_rms = math.sqrt((1/len(Xg))*x_rms)
+    y_rms = math.sqrt((1/len(Xg))*y_rms)
+    z_rms = math.sqrt((1/len(Xg))*z_rms)
+
+    return res_x, res_y, res_z, x_rms, y_rms, z_rms
+    
+
+def object_space_pc(B, W, P, K, tx, ty, tz, scale):
     M = rot_mat(W, P, K)
     t_hat = np.array([[tx], [ty], [tz]])
-    B = np.array([[Xm], [Ym], [Zm]])
 
     rpcL = t_hat
     rpcR = scale*np.dot(M, B) + t_hat
     
     return rpcL, rpcR
 
+def trans_angles(w, p, k, W, P, K):
+    # print(math.degrees(w), math.degrees(p), math.degrees(k))
+    # print(math.degrees(W), math.degrees(P), math.degrees(K))
+
+    M_m_i_R = rot_mat(w, p, k)
+    M_m_i_L = rot_mat(0, 0, 0)
+    M_m_o = rot_mat(W, P, K)
+    # print(f'M_m_o: \n {M_m_o}')
+    M_o_i_L = np.dot(M_m_i_L, M_m_o.T)
+    M_o_i_R = np.dot(M_m_i_R, M_m_o.T)
+
+    return M_o_i_L, M_o_i_R
+
+
 
 if __name__=="__main__":
+
+    # Example
     Xm = [108.9302, 19.5304, 71.8751, -0.9473, 9.6380, 100.4898]
     Ym = [92.5787, 96.0258, 4.9657, -7.4078, -96.5329, -63.9177]
     Zm = [-155.7696, -156.4878, -154.1035, -154.8060, -158.0535, -154.9389]
@@ -166,7 +225,6 @@ if __name__=="__main__":
     Yg = [4382.54, 4626.41, 3844.56, 3934.63, 3269.45, 3279.84]
     Zg = [276.42, 280.05, 283.11, 283.03, 248.10, 266.47]
 
-
     # initial conditions
     W = 0
     P = 0
@@ -174,11 +232,107 @@ if __name__=="__main__":
     tx = 0
     ty = 0
     tz = 0
-    scale = 1
+    scale = 10
 
-    iters = 9
+    # Task #1
+    iters = 3
     for i in range(iters):
-        W, P, K, tx, ty, tz, scale = find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale, Xg, Yg, Zg)
-        print(tx, ty, tz, math.degrees(W), math.degrees(P), math.degrees(K), scale)
+        W, P, K, tx, ty, tz, scale, A_mat = find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale, Xg, Yg, Zg)
+    print(f'\ntx: {tx} m')
+    print(f'ty: {ty} m')
+    print(f'tz {tz} m')
+    print(f'omega: {math.degrees(W)} deg')
+    print(f'phi: {math.degrees(P)} deg')
+    print(f'kappa: {math.degrees(K)} deg')
+    print(f'lambda: {scale}\n')
+    delta = np.array([W, P, K, tx, ty, tz, scale])
 
+    # Task #2 - Convergence Criteria
 
+    # Task #3
+    Xo_vec=np.zeros(len(Xm))
+    Yo_vec=np.zeros(len(Ym))
+    Zo_vec=np.zeros(len(Zm))
+    idx = 0
+    for i in range(len(Xm)):
+        Xo_vec[idx], Yo_vec[idx], Zo_vec[idx] = object_space(Xm[i], Ym[i], Zm[i], W, P, K, tx, ty, tz, scale)
+        idx += 1
+    print(f"Object Space X: {Xo_vec}")
+    print(f"Object Space Y: {Yo_vec}")
+    print(f"Object Space Z: {Zo_vec}\n")
+    
+    vX, vY, vZ, x_rms, y_rms, z_rms = resid(Xg, Yg, Zg, Xo_vec, Yo_vec, Zo_vec)
+    print(f'vX: {vX}')
+    print(f'vY: {vY}')
+    print(f'vZ: {vZ}')
+    print(f'x_rms: {round(x_rms, 4)}')
+    print(f'y_rms: {round(y_rms, 4)}')
+    print(f'z_rms: {round(z_rms, 4)}\n')
+
+    # Task # 4
+    bx = 92.000
+    by = 5.0455
+    bz = 2.1725
+    B = np.array([[bx], [by], [bz]])
+    rpcL, rpcR = object_space_pc(B, W, P, K, tx, ty, tz, scale)
+    print(f'Left Image PC: \n{rpcL}')
+    print(f'Right Image PC: \n{rpcR}\n')
+
+    # Task # 5
+
+    # Task # 7
+    w = math.radians(0.4392)
+    p = math.radians(1.5080)
+    k = math.radians(3.1575)
+    M_o_i_L, M_o_i_R = trans_angles(w, p, k, W, P, K)
+    print(f'Transformation from object to image space (Left): \n {M_o_i_L}')
+    print(f'Transformation from object to image space (Right): \n {M_o_i_R}')
+
+    
+    
+
+    ###########################################################################################################################
+
+    # # Task 1
+    # Xg= [-399.28, 475.55, 517.62]
+    # Yg = [-679.72, -538.18, -194.43]
+    # Zg = [1090.96, 1090.5, 1090.65]
+    # image_model = pre_lab_4.task_1()
+
+    # # initial conditions
+    # W = 0
+    # P = 0
+    # K = 0
+    # tx = 0
+    # ty = 0
+    # tz = 0
+    # scale = 10
+
+    # iters = 3
+    # iters = 3
+    # for i in range(iters):
+    #     W, P, K, tx, ty, tz, scale = find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale, Xg, Yg, Zg)
+    # print(f'\ntx: {tx} m, ty: {ty} m, tz {tz} m, omega: {math.degrees(W)} deg, phi: {math.degrees(P)} deg, kappa: {math.degrees(K)} deg, lambda: {scale}\n')
+    # delta = [W, P, K, tx, ty, tz, scale]
+
+    # Task #2
+    # find_residuals(Xm, Ym, Zm, Xg, Yg, Zg, delta)
+
+    # # Task #3
+    # Xo_vec=np.zeros(len(Xm))
+    # Yo_vec=np.zeros(len(Ym))
+    # Zo_vec=np.zeros(len(Zm))
+    # idx = 0
+    # for i in range(len(Xm)):
+    #     Xo_vec[idx], Yo_vec[idx], Zo_vec[idx] = object_space(Xm[i], Ym[i], Zm[i], W, P, K, tx, ty, tz, scale)
+    #     idx += 1
+    # print(f"Object Space X: {Xo_vec}")
+    # print(f"Object Space Y: {Yo_vec}")
+    # print(f"Object Space Z: {Zo_vec}")
+
+    # # Task # 4
+    # rpcL = np.array([tx, ty, tz])
+
+    # # Task # 5
+
+    
