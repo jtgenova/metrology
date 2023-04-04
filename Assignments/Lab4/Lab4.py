@@ -142,7 +142,10 @@ def find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale, Xg, Yg, Zg):
     tz = tz + delta[5]
     scale = scale + delta[6]
 
-    return round(W[0], 4),  round(P[0], 4), round(K[0], 4), round(tx[0], 4), round(ty[0], 4), round(tz[0], 4), round(scale[0], 4), A_mat
+    delta = [delta[0][0], delta [1][0], delta[2][0], delta[3][0], delta[4][0], delta[5][0], delta[6][0]]
+
+
+    return W[0],  P[0], K[0],  tx[0], ty[0], tz[0],  scale[0],  delta
 
 def object_space(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale):
     M = rot_mat(W, P, K)
@@ -150,7 +153,7 @@ def object_space(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale):
     t_vec = np.array([tx, ty, tz])
     Xo, Yo, Zo = scale*np.dot(M, coords) + t_vec
 
-    return round(Xo[0], 4), round(Yo[1], 4), round(Zo[2], 4)
+    return Xo[0], Yo[1],  Zo[2]
 
 def resid(Xg, Yg, Zg, Xo, Yo, Zo):
     res_x = np.zeros(len(Xg))
@@ -162,9 +165,9 @@ def resid(Xg, Yg, Zg, Xo, Yo, Zo):
     z_rms = 0
 
     for i in range(len(Xg)):
-        res_x[i] = round((Xo[i] - Xg[i]), 4)
-        res_y[i] = round((Yo[i] - Yg[i]), 4)
-        res_z[i] = round((Zo[i] - Zg[i]), 4)
+        res_x[i] = Xo[i] - Xg[i]
+        res_y[i] = Yo[i] - Yg[i]
+        res_z[i] = Zo[i] - Zg[i]
 
         x_rms = x_rms + res_x[i]**2
         y_rms = y_rms + res_y[i]**2
@@ -233,8 +236,7 @@ def find_corr_matrix(A_mat):
     return R
 
 def extract_angles(M_o_i_L, M_o_i_R):
-    print(M_o_i_L)
-    print(M_o_i_L[2][0])
+
     m11_l = M_o_i_L[0][0]
     m21_l = M_o_i_L[1][0]
     m31_l = M_o_i_L[2][0]
@@ -284,13 +286,18 @@ if __name__=="__main__":
 
     # # Task #1
     # iters = 10
-    # done = False
+    # delts = []
     # for i in range(iters):
     #     W_old = W
-    #     W, P, K, tx, ty, tz, scale, A_mat = find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale, Xg, Yg, Zg)
-    #     if abs(W-W_old) < 1e-5:
+    #     tz_old = tz
+    #     W, P, K, tx, ty, tz, scale, err = find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale, Xg, Yg, Zg)
+    #     delts.append(err)
+    #     if abs(W-W_old) < 1e-4 and abs(tz-tz_old) < 1e-4:
     #         print(f'Converged at {i+1} iterations!')
     #         break
+    # delts = np.array([delts[0], delts[1], delts[2]]).T
+    # print(delts)
+    # # print(np.dot(delts, delts.T))
     
     # print(f'\ntx: {tx} m')
     # print(f'ty: {ty} m')
@@ -321,9 +328,9 @@ if __name__=="__main__":
     # print(f'vX: {vX}')
     # print(f'vY: {vY}')
     # print(f'vZ: {vZ}')
-    # print(f'x_rms: {round(x_rms, 4)}')
-    # print(f'y_rms: {round(y_rms, 4)}')
-    # print(f'z_rms: {round(z_rms, 4)}\n')
+    # print(f'x_rms: {x_rms}')
+    # print(f'y_rms: {y_rms}')
+    # print(f'z_rms: {z_rms}\n')
 
     # # Task # 4
     # bx = 92.000
@@ -372,12 +379,19 @@ if __name__=="__main__":
 
     # Task #1
     iters = 10
+    delts = []
     for i in range(iters):
         W_old = W
-        W, P, K, tx, ty, tz, scale, A_mat = find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale, Xg, Yg, Zg)
-        if abs(W-W_old) < 1e-5:
+        tz_old = tz
+        W, P, K, tx, ty, tz, scale, err = find_deltas(Xm, Ym, Zm, W, P, K, tx, ty, tz, scale, Xg, Yg, Zg)
+        delts.append(err)
+        if abs(W-W_old) < 1e-5 and abs(tz-tz_old) < 1e-5:
             print(f'Converged at {i+1} iterations!')
             break
+    # print(delts)
+    delts = np.array([delts[0], delts[1], delts[2]]).T
+    print(delts)
+    # print(np.dot(delts, delts.T))
     
     # print(find_corr_matrix(A_mat))
     print(f'\ntx: {tx} m')
@@ -407,9 +421,9 @@ if __name__=="__main__":
     print(f'vX: {vX}')
     print(f'vY: {vY}')
     print(f'vZ: {vZ}')
-    print(f'x_rms: {round(x_rms, 4)}')
-    print(f'y_rms: {round(y_rms, 4)}')
-    print(f'z_rms: {round(z_rms, 4)}\n')
+    print(f'x_rms: {x_rms}')
+    print(f'y_rms: {y_rms}')
+    print(f'z_rms: {z_rms}\n')
 
     # Task # 4
     print('Task 4:')
@@ -449,12 +463,16 @@ if __name__=="__main__":
 
    # calculate deltas for validation
     iters = 10
+    delts_val = []
     for i in range(iters):
         W_old_val = W_val
-        W_val, P_val, K_val, tx_val, ty_val, tz_val, scale_val, A_mat_val = find_deltas(Xm_val, Ym_val, Zm_val, W_val, P_val, K_val, tx_val, ty_val, tz_val, scale_val, Xg_val, Yg_val, Zg_val)
-        if abs(W_val-W_old_val) < 1e-5:
+        tz_old_val = tz_val
+        W_val, P_val, K_val, tx_val, ty_val, tz_val, scale_val, err_val = find_deltas(Xm_val, Ym_val, Zm_val, W_val, P_val, K_val, tx_val, ty_val, tz_val, scale_val, Xg_val, Yg_val, Zg_val)
+        print(err_val)
+        if abs(W_val-W_old_val) < 1e-5 and abs(tz_val-tz_old_val) < 1e-5:
             print(f'Converged at {i+1} iterations!')
             break
+    
     
     # print(find_corr_matrix(A_mat))
     print(f'\ntx_val: {tx_val} m')
@@ -484,16 +502,17 @@ if __name__=="__main__":
     print(f'vX_val: {vX_val}')
     print(f'vY_val: {vY_val}')
     print(f'vZ_val: {vZ_val}')
-    print(f'x_rms_val: {round(x_rms_val, 4)}')
-    print(f'y_rms_val: {round(y_rms_val, 4)}')
-    print(f'z_rms_val: {round(z_rms_val, 4)}\n')
+    print(f'x_rms_val: {x_rms_val}')
+    print(f'y_rms_val: {y_rms_val}')
+    print(f'z_rms_val: {z_rms_val}\n')
 
+    print('-'*80)
     # extract angles
     Xg_all = [-399.28, 475.55, 517.62, -466.39, 42.73, 321.09, 527.78]
     Yg_all = [-679.72, -538.18, -194.43,-542.31, -412.19, -667.45, -375.72]
     Zg_all = [1090.96, 1090.5, 1090.65, 1091.55, 1090.82, 1083.49, 1092]
     image_model_L_all, image_model_R_all = pre_lab_4.task_7()
-    print(f'Model Space: \n{image_model_L_all}')
+    # print(f'Model Space: \n{image_model_L_all}')
     Xm_all = image_model_L_all[:,0]
     Ym_all = image_model_L_all[:,1]
     Zm_all = image_model_L_all[:,2]
@@ -502,21 +521,21 @@ if __name__=="__main__":
     K_all, tx_all, ty_all, tz_all, scale_all = approx_vals(Xm_all, Ym_all, Zm_all, Xg_all, Yg_all, Zg_all)
     W_all = 0
     P_all = 0
-    print('Task 1:')
-    print('Initial Conditions')
-    print(f'W_all: {math.degrees(W_all)}')
-    print(f'P_all: {math.degrees(P_all)}')
-    print(f'K_all: {math.degrees(K_all)}')
-    print(f'tx_all: {tx_all}')
-    print(f'ty_all: {ty_all}')
-    print(f'tz_all: {tz_all}')
-    print(f'scale_all: {scale_all}\n')
+    # print('Initial Conditions')
+    # print(f'W_all: {math.degrees(W_all)}')
+    # print(f'P_all: {math.degrees(P_all)}')
+    # print(f'K_all: {math.degrees(K_all)}')
+    # print(f'tx_all: {tx_all}')
+    # print(f'ty_all: {ty_all}')
+    # print(f'tz_all: {tz_all}')
+    # print(f'scale_all: {scale_all}\n')
 
     iters = 10
     for i in range(iters):
         W_old_all = W_all
+        tz_old_all = tz_all
         W_all, P_all, K_all, tx_all, ty_all, tz_all, scale_all, A_mat_all = find_deltas(Xm_all, Ym_all, Zm_all, W_all, P_all, K_all, tx_all, ty_all, tz_all, scale_all, Xg_all, Yg_all, Zg_all)
-        if abs(W-W_old) < 1e-5:
+        if abs(W_all-W_old_all) < 1e-5 and abs(tz_all-tz_old_all) < 1e-5:
             print(f'Converged at {i+1} iterations!')
             break
     
@@ -533,8 +552,8 @@ if __name__=="__main__":
     p = math.radians(0.271)
     k = math.radians(-1.73)
     M_o_i_L_all, M_o_i_R_all = trans_angles(w, p, k, W_all, P_all, K_all)
-    print(f'Transformation from object to image space (Left): \n {M_o_i_L_all}')
-    print(f'Transformation from object to image space (Right): \n {M_o_i_R_all}')
+    # print(f'Transformation from object to image space (Left): \n {M_o_i_L_all}')
+    # print(f'Transformation from object to image space (Right): \n {M_o_i_R_all}')
 
     left_image_angles, right_image_angles = extract_angles(M_o_i_L_all, M_o_i_R_all)
     print(f'Extracted Angles Left: {left_image_angles}')

@@ -106,14 +106,14 @@ def find_delta(xl, yl, c, xr, yr, zr, bx, by, bz, omega, phi, kappa):
         idx += 1
     A_matrix_trans = np.transpose(A_matrix)
     by_e, bz_e, omega_e, phi_e, kappa_e = -np.dot(np.dot(inv(np.dot(A_matrix_trans, A_matrix)), A_matrix_trans), w)
-    err = A_matrix
     by = by + by_e[0]
     bz = bz + bz_e[0]
     omega = omega + omega_e[0]
     phi = phi + phi_e[0]
     kappa = kappa + kappa_e[0]
+    delts = [by_e[0], bz_e[0], omega_e[0], phi_e[0], kappa_e[0]]
     
-    return by, bz, omega, phi, kappa, err
+    return by, bz, omega, phi, kappa, delts
 
 def space_intersection(xl, yl, c, xr, yr, zr, bx, by, bz):
     scale = (bx*zr - bz*xr) / (xl*zr + c*xr)
@@ -150,15 +150,13 @@ def plot_scale(scale_left, scale_right):
 
     plt.show()
 
-def find_corr_matrix(err_mat):
+def find_corr_matrix(A_mat):
     # A_mat = np.zeros(shape=(len(err_mat),5))
-    D_mat = np.zeros(shape=(len(err_mat),5))
+    D_mat = np.zeros(shape=(len(A_mat),5))
     S_mat = np.zeros(shape=(5,5))
     
     # for i in range(len(err_mat)):
     #     A_mat[i] = err_mat[i]
-    A_mat = err_mat
-    # print(A_mat)
 
     dby_mean = np.mean([A_mat[:,0]])
     dbz_mean = np.mean([A_mat[:,1]])
@@ -178,7 +176,7 @@ def find_corr_matrix(err_mat):
         idx += 1
 
     CSSP = np.dot(D_mat.T, D_mat)
-    C = CSSP*(1/(len(err_mat)-1))
+    C = CSSP*(1/(len(A_mat)-1))
     for i in range(len(C)):
         S_mat[i][i] = math.sqrt(C[i][i])
     S_inv = inv(S_mat)
@@ -213,18 +211,22 @@ if __name__=="__main__":
     # phi = 0
     # kappa = 0
 
-    # err_mat = []
+    # delts = []
     # iter = 1
-    # while(True):
+    # for i in range(10):
     #     xr_t, yr_t, zr_t = transform_images(xr, yr, c, omega, phi, kappa)
     #     old_by = by
     #     by, bz, omega, phi, kappa, err = find_delta(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz, omega, phi, kappa)
-    #     err_mat.append(err)
+    #     delts.append(err)
     #     print(f'Number of iterations = {iter}')
-    #     print(f'delta:\n {np.array([round(by, 3), round(bz, 3), round(math.degrees(omega), 3), round(math.degrees(phi), 3), round(math.degrees(kappa), 3)])}')
+    #     # print(f'delta:\n {np.array([round(by, 3), round(bz, 3), round(math.degrees(omega), 3), round(math.degrees(phi), 3), round(math.degrees(kappa), 3)])}')
     #     iter += 1
     #     if abs(old_by - by) < 1e-3:
     #         break
+    # delts = np.array([delts[0], delts[1], delts[2]]).T
+    # print(delts)
+    # print(np.dot(delts, delts.T))
+
 
     # model_L, model_R, pY, scale_left, scale_right = space_intersection(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz)
 
@@ -257,27 +259,30 @@ if __name__=="__main__":
     phi = 0
     kappa = 0
 
-    # err_mat = []
+    delts = []
     iter = 1
     for i in range(3):
         xr_t, yr_t, zr_t = transform_images(xr, yr, c, omega, phi, kappa)
         by, bz, omega, phi, kappa, err = find_delta(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz, omega, phi, kappa)
-        # err_mat.append(err)
+        delts.append(err)
         print(f'Number of iterations = {iter}')
-        print(f'delta:\n {np.array([by, bz, omega, phi, kappa])}')
+        # print(f'delta:\n {np.array([by, bz, omega, phi, kappa])}')
         iter += 1
 
-    model_L, model_R, pY, scale_left, scale_right = space_intersection(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz)
+    delts = np.array([delts[0], delts[1], delts[2]])
+    # print(delts)
+    print(np.dot(delts.T, delts))
 
-    # print(f'Model L:\n {model_L}\n')
-    # print(f'Model R:\n {model_R}\n')
+    # model_L, model_R, pY, scale_left, scale_right = space_intersection(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz)
 
-    print(f'scale: \n{scale_left}\n')
-    print(f'mu: \n{scale_right}\n')
+    # # print(f'Model L:\n {model_L}\n')
+    # # print(f'Model R:\n {model_R}\n')
 
-    # print(f'y-parallax values: \n{pY}\n')
+    # print(f'scale: \n{scale_left}\n')
+    # print(f'mu: \n{scale_right}\n')
 
-    # plot_scale(scale_left, scale_right)
-    # err = np.dot(err.T, err)
-    # corr_matrix = find_corr_matrix(err)
+    # # print(f'y-parallax values: \n{pY}\n')
+
+    # # plot_scale(scale_left, scale_right)
+    # corr_matrix = find_corr_matrix(A_matrix)
     # print(f'Correlation Coefficient Matrix: \n{corr_matrix}\n')
