@@ -66,10 +66,30 @@ def task_1():
 
     c = 153.358 # mm
 
-    xl = [-9.444, 18.919, 90.289]
-    yl = [96.236, -81.819, -91.049]
-    xr = [-105.378, -72.539, -1.405]
-    yr = [98.756, -79.786, -86.941]
+    xl = np.array([-9.444, 18.919, 90.289])
+    yl = np.array([96.236, -81.819, -91.049])
+    xr = np.array([-105.378, -72.539, -1.405])
+    yr = np.array([98.756, -79.786, -86.941])
     xr_t, yr_t, zr_t = transform_images(xr, yr, c, w, p, k)
     model_L, model_R, pY, scale_left, scale_right = space_intersection(xl, yl, c, xr_t, yr_t, zr_t, bX, bY, bZ)
-    return model_L
+    return model_L, model_R
+
+def task_5():
+    # from lab 3
+    bX = 92.000
+    bY = -1.422
+    bZ = -1.287
+    w = math.radians(-0.978)
+    p = math.radians(0.271)
+    k = math.radians(-1.73)
+
+    c = 153.358 # mm
+
+    xl = np.array([18.174, 44.681, -7.578, 52.736])
+    yl = np.array([109.538, 7.483, -49.077, -93.140])
+    xr = np.array([-77.840, -48.786, -98.814, -38.924])
+    yr = np.array([113.375, 10.165, -48.039, -90.035])
+    xr_t, yr_t, zr_t = transform_images(xr, yr, c, w, p, k)
+    model_L, model_R, pY, scale_left, scale_right = space_intersection(xl, yl, c, xr_t, yr_t, zr_t, bX, bY, bZ)
+    return model_L, model_R
+
