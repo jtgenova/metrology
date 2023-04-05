@@ -196,7 +196,7 @@ if __name__=="__main__":
     # xc2 = [1411, 9416, 2275, 11129, 4160, 10137]
     # yc2 = [-2081, -1167, -10787, -10048, -17085, -17690]
 
-    # c = 153.358 # mm
+    c = 153.358 # mm
 
     # left_images, right_images = correct_images(xc1, yc1, xc2, yc2)
     # xl = left_images[:,0]
@@ -204,33 +204,39 @@ if __name__=="__main__":
     # xr = right_images[:,0]
     # yr = right_images[:,1]
 
-    # bx = 92.000
-    # by = 0
-    # bz = 0
-    # omega = 0
-    # phi = 0
-    # kappa = 0
+    xl = np.array([18.174, 44.681, -7.578, 52.736])
+    yl = np.array([109.538, 7.483, -49.077, -93.140])
+    xr = np.array([-77.840, -48.786, -98.814, -38.924])
+    yr = np.array([113.375, 10.165, -48.039, -90.035])
 
-    # delts = []
-    # iter = 1
-    # for i in range(10):
-    #     xr_t, yr_t, zr_t = transform_images(xr, yr, c, omega, phi, kappa)
-    #     old_by = by
-    #     by, bz, omega, phi, kappa, err = find_delta(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz, omega, phi, kappa)
-    #     delts.append(err)
-    #     print(f'Number of iterations = {iter}')
-    #     # print(f'delta:\n {np.array([round(by, 3), round(bz, 3), round(math.degrees(omega), 3), round(math.degrees(phi), 3), round(math.degrees(kappa), 3)])}')
-    #     iter += 1
-    #     if abs(old_by - by) < 1e-3:
-    #         break
+    bx = 92.000
+    by = 0
+    bz = 0
+    omega = 0
+    phi = 0
+    kappa = 0
+
+    delts = []
+    iter = 1
+    for i in range(100):
+        xr_t, yr_t, zr_t = transform_images(xr, yr, c, omega, phi, kappa)
+        old_by = by
+        by, bz, omega, phi, kappa, err = find_delta(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz, omega, phi, kappa)
+        delts.append(err)
+        # print(f'delta:\n {np.array([round(by, 3), round(bz, 3), round(math.degrees(omega), 3), round(math.degrees(phi), 3), round(math.degrees(kappa), 3)])}')
+        
+        iter += 1
+        if abs(old_by - by) < 1e-3:
+            break
+    print(f'Number of iterations = {iter}')
+    print(by, bz, omega, phi, kappa)
     # delts = np.array([delts[0], delts[1], delts[2]]).T
     # print(delts)
     # print(np.dot(delts, delts.T))
 
+    model_L, model_R, pY, scale_left, scale_right = space_intersection(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz)
 
-    # model_L, model_R, pY, scale_left, scale_right = space_intersection(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz)
-
-    # print(f'Model L:\n {model_L}\n')
+    print(f'Model L:\n {model_L}\n')
     # print(f'Model R:\n {model_R}\n')
 
     # print(f'scale: \n{scale_left}\n')
@@ -244,45 +250,45 @@ if __name__=="__main__":
     # print(f'Correlation Coefficient Matrix: \n{corr_matrix}\n')
 
 ###################################################
-    # Example
-    xl = np.array([106.399, 18.989, 70.964, -0.931, 9.278, 98.681])
-    yl = np.array([90.426, 93.365, 4.907, -7.284, -92.926, -62.769])
-    xr = np.array([24.848, -59.653, -15.581, -85.407, -78.81, 8.492])
-    yr = np.array([81.824, 88.138, -0.387, -8.351, -92.62, -68.873])
+    # # Example
+    # xl = np.array([106.399, 18.989, 70.964, -0.931, 9.278, 98.681])
+    # yl = np.array([90.426, 93.365, 4.907, -7.284, -92.926, -62.769])
+    # xr = np.array([24.848, -59.653, -15.581, -85.407, -78.81, 8.492])
+    # yr = np.array([81.824, 88.138, -0.387, -8.351, -92.62, -68.873])
 
-    # initial params
-    c = 152.15
-    bx = 92.000
-    by = 0
-    bz = 0
-    omega = 0
-    phi = 0
-    kappa = 0
+    # # initial params
+    # c = 152.15
+    # bx = 92.000
+    # by = 0
+    # bz = 0
+    # omega = 0
+    # phi = 0
+    # kappa = 0
 
-    delts = []
-    iter = 1
-    for i in range(3):
-        xr_t, yr_t, zr_t = transform_images(xr, yr, c, omega, phi, kappa)
-        by, bz, omega, phi, kappa, err = find_delta(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz, omega, phi, kappa)
-        delts.append(err)
-        print(f'Number of iterations = {iter}')
-        # print(f'delta:\n {np.array([by, bz, omega, phi, kappa])}')
-        iter += 1
+    # delts = []
+    # iter = 1
+    # for i in range(3):
+    #     xr_t, yr_t, zr_t = transform_images(xr, yr, c, omega, phi, kappa)
+    #     by, bz, omega, phi, kappa, err = find_delta(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz, omega, phi, kappa)
+    #     delts.append(err)
+    #     print(f'Number of iterations = {iter}')
+    #     # print(f'delta:\n {np.array([by, bz, omega, phi, kappa])}')
+    #     iter += 1
 
-    delts = np.array([delts[0], delts[1], delts[2]])
-    # print(delts)
-    print(np.dot(delts.T, delts))
+    # # delts = np.array([delts[0], delts[1], delts[2]])
+    # # # print(delts)
+    # # print(np.dot(delts.T, delts))
 
-    # model_L, model_R, pY, scale_left, scale_right = space_intersection(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz)
+    # # model_L, model_R, pY, scale_left, scale_right = space_intersection(xl, yl, c, xr_t, yr_t, zr_t, bx, by, bz)
 
-    # # print(f'Model L:\n {model_L}\n')
-    # # print(f'Model R:\n {model_R}\n')
+    # # # print(f'Model L:\n {model_L}\n')
+    # # # print(f'Model R:\n {model_R}\n')
 
-    # print(f'scale: \n{scale_left}\n')
-    # print(f'mu: \n{scale_right}\n')
+    # # print(f'scale: \n{scale_left}\n')
+    # # print(f'mu: \n{scale_right}\n')
 
-    # # print(f'y-parallax values: \n{pY}\n')
+    # # # print(f'y-parallax values: \n{pY}\n')
 
-    # # plot_scale(scale_left, scale_right)
-    # corr_matrix = find_corr_matrix(A_matrix)
-    # print(f'Correlation Coefficient Matrix: \n{corr_matrix}\n')
+    # # # plot_scale(scale_left, scale_right)
+    # # corr_matrix = find_corr_matrix(A_matrix)
+    # # print(f'Correlation Coefficient Matrix: \n{corr_matrix}\n')

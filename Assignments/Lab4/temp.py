@@ -32,35 +32,8 @@ A5 = [386.93, -807.64, -220.84, -1196.20, -1059.30, 142.19]
 
 A_mat = np.array([A1, A2, A3, A4, A5]).T
 N = len(A1)
-print(f'A matrix:\n {A_mat}')
 
-A1_mean = sum(A1)/len(A1)
-A2_mean = sum(A2)/len(A2)
-A3_mean = sum(A3)/len(A3)
-A4_mean = sum(A4)/len(A4)
-A5_mean = sum(A5)/len(A5)
-
-x_bar = np.array([[A1], [A2], [A3], [A4], [A5]])
-
-
-D_mat = np.zeros(shape=(len(A1), 5))
-print(D_mat)
-idx = 0
-for i in range(len(A1)):
-    D_mat[idx][0] = A1[i] - A1_mean
-    D_mat[idx][1] = A2[i] - A2_mean
-    D_mat[idx][2] = A3[i] - A3_mean
-    D_mat[idx][3] = A4[i] - A4_mean
-    D_mat[idx][4] = A5[i] - A5_mean
-
-    idx += 1
-
-print(f'D matrix:\n {D_mat}')
-
-CCSP = np.dot(D_mat.T, D_mat)
-print(f'CCSP matrix:\n {CCSP}')
-
-C = CCSP*(1/(N-1))
+C = np.linalg.inv(np.dot(A_mat.T, A_mat))
 print(f'C Matrix: \n {C}')
 
 S = C.diagonal()
