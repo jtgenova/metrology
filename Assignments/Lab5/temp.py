@@ -4,7 +4,8 @@ import math
 from math import sin, cos
 from statistics import mean, stdev
 
-x_c = stdev([10.684634574927676, 0.16430512736512198, -0.00023265661134797])
-print(x_c)
-y_c = stdev([3965.180648098762, 3965.2525574666943, 3965.2528883804052])
-print(y_c)
+r = 15e-6
+x_max = (229/2*math.sqrt(2))*10**-3
+# x_max = 161e-3
+print(math.degrees(r/(10*x_max)))
+# print(math.degrees(r/(10*c)))
