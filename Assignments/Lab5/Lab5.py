@@ -196,20 +196,20 @@ class Resection:
         self.find_corr_matrix()
 
 if __name__=="__main__":
-    # Example
-    x = [106.399, 18.989, 98.681, 9.278]
-    y = [90.426, 93.365, -62.769, -92.926]
+    # # Example
+    # x = [106.399, 18.989, 98.681, 9.278]
+    # y = [90.426, 93.365, -62.769, -92.926]
 
-    Xo = [7350.27, 6717.22, 6905.26, 6172.84]
-    Yo = [4382.54, 4626.41, 3279.84, 3269.45]
-    Zo = [276.42, 280.05, 266.47, 248.10]
+    # Xo = [7350.27, 6717.22, 6905.26, 6172.84]
+    # Yo = [4382.54, 4626.41, 3279.84, 3269.45]
+    # Zo = [276.42, 280.05, 266.47, 248.10]
 
-    c = 152.150 # mm
-    format_size = 229 # mm
-    S = 7800
-    sigma_obs = 15 # um
-    resection = Resection(x, y, Xo, Yo, Zo, c, S, format_size, sigma_obs)
-    resection.report()
+    # c = 152.150 # mm
+    # format_size = 229 # mm
+    # S = 7800
+    # sigma_obs = 15 # um
+    # resection = Resection(x, y, Xo, Yo, Zo, c, S, format_size, sigma_obs)
+    # resection.report()
 
     # image 27
     x_27 = [-9.444, 18.919, 90.289, 18.174, 44.681, -7.578, 52.736]
@@ -222,28 +222,28 @@ if __name__=="__main__":
     Yo = [-679.72, -538.18, -194.43, -542.31, -412.19, -667.45, -375.72]
     Zo = [1090.96, 1090.5, 1090.65, 1091.55, 1090.82, 1083.49, 1092]
 
-    # c = 153.358 # mm
-    # format_size = 228.6 # mm
-    # S = 5000
-    # sigma_obs = 15 # um
-    # corr_27 = []
-    # corr_28 = []
-    # for i in range(4):
-    #     resection_27 = Resection(x_27[0:3+i], y_27[0:3+i], Xo[0:3+i], Yo[0:3+i], Zo[0:3+i], c, S, format_size, sigma_obs)
-    #     print('-'*80)
-    #     print(f'Printing Report for Image 27, points 100, 104, 105, 200 - 20{i}\n')
-    #     print('-'*80)
-    #     resection_27.report()
-    #     corr_27.append(resection_27.store_corr_mat())
-    #     print('-'*80)
+    c = 153.358 # mm
+    format_size = 228.6 # mm
+    S = 5000
+    sigma_obs = 15 # um
+    corr_27 = []
+    corr_28 = []
+    for i in range(4):
+        resection_27 = Resection(x_27[0:3+i], y_27[0:3+i], Xo[0:3+i], Yo[0:3+i], Zo[0:3+i], c, S, format_size, sigma_obs)
+        print('-'*80)
+        print(f'Printing Report for Image 27, points 100, 104, 105, 200 - 20{i}\n')
+        print('-'*80)
+        resection_27.report()
+        corr_27.append(resection_27.store_corr_mat())
+        print('-'*80)
         
-    #     resection_28 = Resection(x_28[0:3+i], y_28[0:3+i], Xo[0:3+i], Yo[0:3+i], Zo[0:3+i], c, S, format_size, sigma_obs)
-    #     print('-'*80)
-    #     print(f'Printing Report for Image 28, points 100, 104, 105, 200 - 20{i}\n')
-    #     print('-'*80)
-    #     resection_28.report()
-    #     corr_28.append(resection_28.store_corr_mat())
-    #     print('-'*80)
+        resection_28 = Resection(x_28[0:3+i], y_28[0:3+i], Xo[0:3+i], Yo[0:3+i], Zo[0:3+i], c, S, format_size, sigma_obs)
+        print('-'*80)
+        print(f'Printing Report for Image 28, points 100, 104, 105, 200 - 20{i}\n')
+        print('-'*80)
+        resection_28.report()
+        corr_28.append(resection_28.store_corr_mat())
+        print('-'*80)
 
     # print(np.array(corr_27))
     # print(np.array(corr_28))
