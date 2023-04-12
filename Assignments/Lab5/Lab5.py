@@ -13,6 +13,7 @@ from math import sin, cos
 from statistics import mean
 import preLab5 as prelab5
 from statistics import mean, stdev
+import matplotlib.pyplot as plt
 
 class Resection:
     def __init__(self, x, y, Xo, Yo, Zo, c, S, format_size, sigma_obs):
@@ -195,6 +196,22 @@ class Resection:
         self.resid()
         self.find_corr_matrix()
 
+def plot_corr(size, corr_mat):
+    init_vector = np.zeros(len(corr_mat))
+    x_vals = ["4", "5", "6", "7"]
+    names = ["Xc_Yc", "Xc_Zc", "Xc_w", "Xc_p", "Xc_k", "Yc_Zc", "Yc_w", "Yc_p", "Yc_k", "Zc_w", "Zc_p", "Zc_k", "w_p", "w_k", "p_k"]
+    for i in range(len(names)):
+        plt.plot(x_vals, corr_mat[i], '-o', label=names[i])
+
+    plt.xlabel("# of Observed Image Points", fontdict={'family':'serif','color':'black','size':10})
+    plt.ylabel('Correlation', fontdict={'family':'serif','color':'black','size':10})
+    plt.title("Correlation Trend", fontdict ={'family':'serif','color':'black','size':12})
+    plt.legend()
+    plt.show()
+
+
+
+
 if __name__=="__main__":
     # # Example
     # x = [106.399, 18.989, 98.681, 9.278]
@@ -245,7 +262,15 @@ if __name__=="__main__":
         corr_28.append(resection_28.store_corr_mat())
         print('-'*80)
 
-    # print(np.array(corr_27))
-    # print(np.array(corr_28))
+    size = len(corr_27)
+    corr_27 = np.array(corr_27).T
+    print(corr_27)
+    plot_corr(size, corr_27)
+
+    size = len(corr_28)
+    corr_28 = np.array(corr_28).T
+    print(corr_28)
+    plot_corr(size, corr_28)
+
     
 
