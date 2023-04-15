@@ -209,68 +209,65 @@ def plot_corr(size, corr_mat):
     plt.legend()
     plt.show()
 
-
-
-
 if __name__=="__main__":
-    # # Example
-    # x = [106.399, 18.989, 98.681, 9.278]
-    # y = [90.426, 93.365, -62.769, -92.926]
+    # Example
+    x = [106.399, 18.989, 98.681, 9.278]
+    y = [90.426, 93.365, -62.769, -92.926]
 
-    # Xo = [7350.27, 6717.22, 6905.26, 6172.84]
-    # Yo = [4382.54, 4626.41, 3279.84, 3269.45]
-    # Zo = [276.42, 280.05, 266.47, 248.10]
+    Xo = [7350.27, 6717.22, 6905.26, 6172.84]
+    Yo = [4382.54, 4626.41, 3279.84, 3269.45]
+    Zo = [276.42, 280.05, 266.47, 248.10]
 
-    # c = 152.150 # mm
-    # format_size = 229 # mm
-    # S = 7800
-    # sigma_obs = 15 # um
-    # resection = Resection(x, y, Xo, Yo, Zo, c, S, format_size, sigma_obs)
-    # resection.report()
-
-    # image 27
-    x_27 = [-9.444, 18.919, 90.289, 18.174, 44.681, -7.578, 52.736]
-    y_27 = [96.236, -81.819, -91.049, 109.538, 7.483, -49.077, -93.140]
-    # image 28
-    x_28 = [-105.378, -72.539, -1.405, -77.840, -48.786, -98.814, -38.924]
-    y_28 = [98.756, -79.786, -86.941, 113.375, 10.165, -48.039, -90.035]
-    # control points
-    Xo = [-399.28, 475.55, 517.62, -466.39, 42.73, 321.09, 527.78]
-    Yo = [-679.72, -538.18, -194.43, -542.31, -412.19, -667.45, -375.72]
-    Zo = [1090.96, 1090.5, 1090.65, 1091.55, 1090.82, 1083.49, 1092]
-
-    c = 153.358 # mm
-    format_size = 228.6 # mm
-    S = 5000
+    c = 152.150 # mm
+    format_size = 229 # mm
+    S = 7800
     sigma_obs = 15 # um
-    corr_27 = []
-    corr_28 = []
-    for i in range(4):
-        resection_27 = Resection(x_27[0:3+i], y_27[0:3+i], Xo[0:3+i], Yo[0:3+i], Zo[0:3+i], c, S, format_size, sigma_obs)
-        print('-'*80)
-        print(f'Printing Report for Image 27, points 100, 104, 105, 200 - 20{i}\n')
-        print('-'*80)
-        resection_27.report()
-        corr_27.append(resection_27.store_corr_mat())
-        print('-'*80)
+    resection = Resection(x, y, Xo, Yo, Zo, c, S, format_size, sigma_obs)
+    resection.report()
+
+    # # image 27
+    # x_27 = [-9.444, 18.919, 90.289, 18.174, 44.681, -7.578, 52.736]
+    # y_27 = [96.236, -81.819, -91.049, 109.538, 7.483, -49.077, -93.140]
+    # # image 28
+    # x_28 = [-105.378, -72.539, -1.405, -77.840, -48.786, -98.814, -38.924]
+    # y_28 = [98.756, -79.786, -86.941, 113.375, 10.165, -48.039, -90.035]
+    # # control points
+    # Xo = [-399.28, 475.55, 517.62, -466.39, 42.73, 321.09, 527.78]
+    # Yo = [-679.72, -538.18, -194.43, -542.31, -412.19, -667.45, -375.72]
+    # Zo = [1090.96, 1090.5, 1090.65, 1091.55, 1090.82, 1083.49, 1092]
+
+    # c = 153.358 # mm
+    # format_size = 228.6 # mm
+    # S = 5000
+    # sigma_obs = 15 # um
+    # corr_27 = []
+    # corr_28 = []
+    # for i in range(4):
+    #     resection_27 = Resection(x_27[0:3+i], y_27[0:3+i], Xo[0:3+i], Yo[0:3+i], Zo[0:3+i], c, S, format_size, sigma_obs)
+    #     print('-'*80)
+    #     print(f'Printing Report for Image 27, points 100, 104, 105, 200 - 20{i}\n')
+    #     print('-'*80)
+    #     resection_27.report()
+    #     corr_27.append(resection_27.store_corr_mat())
+    #     print('-'*80)
         
-        resection_28 = Resection(x_28[0:3+i], y_28[0:3+i], Xo[0:3+i], Yo[0:3+i], Zo[0:3+i], c, S, format_size, sigma_obs)
-        print('-'*80)
-        print(f'Printing Report for Image 28, points 100, 104, 105, 200 - 20{i}\n')
-        print('-'*80)
-        resection_28.report()
-        corr_28.append(resection_28.store_corr_mat())
-        print('-'*80)
+    #     resection_28 = Resection(x_28[0:3+i], y_28[0:3+i], Xo[0:3+i], Yo[0:3+i], Zo[0:3+i], c, S, format_size, sigma_obs)
+    #     print('-'*80)
+    #     print(f'Printing Report for Image 28, points 100, 104, 105, 200 - 20{i}\n')
+    #     print('-'*80)
+    #     resection_28.report()
+    #     corr_28.append(resection_28.store_corr_mat())
+    #     print('-'*80)
 
-    size = len(corr_27)
-    corr_27 = np.array(corr_27).T
-    print(corr_27)
-    plot_corr(size, corr_27)
+    # size = len(corr_27)
+    # corr_27 = np.array(corr_27).T
+    # print(corr_27)
+    # plot_corr(size, corr_27)
 
-    size = len(corr_28)
-    corr_28 = np.array(corr_28).T
-    print(corr_28)
-    plot_corr(size, corr_28)
+    # size = len(corr_28)
+    # corr_28 = np.array(corr_28).T
+    # print(corr_28)
+    # plot_corr(size, corr_28)
 
     
 
