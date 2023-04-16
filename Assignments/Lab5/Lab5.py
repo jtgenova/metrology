@@ -25,7 +25,7 @@ class Resection:
         self.c = c
         self.S = S
         self.format_size = format_size
-        self.sigma_obs = sigma_obs
+        self.sigma_obs = sigma_obs*10**-6
         self.P = 1/(sigma_obs**2)*np.identity(len(x*2))
         self.xp = 0
         self.yp = 0
@@ -99,14 +99,14 @@ class Resection:
         return X_c, Y_c, Z_c, w, p, k, A_mat
     
     def converge(self):
-        r_obs = self.sigma_obs * 10**-6
+        r_obs = self.sigma_obs
         tol_coords = self.S*r_obs/10
         tol_tilt = r_obs/(10*self.c*10**-3)
         x_max = (self.format_size/2*math.sqrt(2))*10**-3
         tol_k = r_obs/(10*x_max)
-        print(f'Tol_coords: {round(tol_coords, 4)}')
-        print(f'tol_tilt: {round(math.degrees(tol_tilt), 4)}')
-        print(f'Tol_k: {round(math.degrees(tol_k), 4)}\n')
+        print(f'Tol_coords: {round(tol_coords, 6)}')
+        print(f'tol_tilt: {round(math.degrees(tol_tilt), 6)}')
+        print(f'Tol_k: {round(math.degrees(tol_k), 6)}\n')
 
         iters = 10
         self.X_c, self.Y_c, self.Z_c, self.w, self.p, self.k = self.find_approx()
@@ -120,7 +120,7 @@ class Resection:
 
             self.X_c, self.Y_c, self.Z_c, self.w, self.p, self.k, self.A_mat= self.find_delta(self.X_c, self.Y_c, self.Z_c, self.w, self.p, self.k)
             
-            if abs(self.X_c-X_c_old)<tol_coords and abs(self.Y_c-Y_c_old)<tol_coords and abs(self.Z_c-Z_c_old)<tol_coords and abs(self.w-w_old)<tol_tilt and abs(self.p-p_old)<tol_tilt and abs(self.p-p_old)<tol_k:
+            if abs(self.X_c-X_c_old)<tol_coords and abs(self.Y_c-Y_c_old)<tol_coords and abs(self.Z_c-Z_c_old)<tol_coords and abs(self.w-w_old)<tol_tilt and abs(self.p-p_old)<tol_tilt and abs(self.k-k_old)<tol_k:
                 print(f'Converged at {i+1} iterations!')
                 break
             
@@ -157,20 +157,23 @@ class Resection:
         x_rms = math.sqrt((1/len(self.Xo))*x_rms)
         y_rms = math.sqrt((1/len(self.Yo))*y_rms)
 
-        print(f'Vx: {res_x, 4}')
-        print(f'Vy: {res_y, 4}')
+        print(f'Vx: {np.around(res_x, 4)}')
+        print(f'Vy: {np.around(res_y, 4)}')
         print(f'x_rms: {round(x_rms, 4)}')
         print(f'y_rms: {round(y_rms, 4)}\n')
 
     def find_corr_matrix(self):
         S_mat = np.zeros(shape=(6,6))
-        C = inv(np.dot(self.A_mat.T, self.A_mat))
+        self.std = []
+        C = inv(np.dot(np.dot(self.A_mat.T, self.P), self.A_mat))
         for i in range(len(C)):
             S_mat[i][i] = math.sqrt(C[i][i])
+            self.std.append(math.sqrt(C[i][i]))
+        
         S_inv = inv(S_mat)
         self.R = np.dot(S_inv, np.dot(C, S_inv))
-        print(S_mat)
-        print(f'Correlation Coefficient Matrix: \n{self.R}\n')
+        print(f'Correlation Coefficient Matrix: \n{np.around(self.R, 4)}\n')
+        print(f'Standard Deviation: \n{np.around(self.std, 4)}\n')
     
     def store_corr_mat(self):
         return [self.R[0][1],
@@ -190,14 +193,15 @@ class Resection:
                 self.R[4][5]
 
             ]
+    def store_std_dev(self):
+        return self.std
 
     def report(self):
         self.converge()
         self.resid()
         self.find_corr_matrix()
 
-def plot_corr(size, corr_mat):
-    init_vector = np.zeros(len(corr_mat))
+def plot_corr(corr_mat):
     x_vals = ["4", "5", "6", "7"]
     names = ["Xc_Yc", "Xc_Zc", "Xc_w", "Xc_p", "Xc_k", "Yc_Zc", "Yc_w", "Yc_p", "Yc_k", "Zc_w", "Zc_p", "Zc_k", "w_p", "w_k", "p_k"]
     for i in range(len(names)):
@@ -209,65 +213,86 @@ def plot_corr(size, corr_mat):
     plt.legend()
     plt.show()
 
+def plot_std(std_vec):
+    x_vals = ["4", "5", "6", "7"]
+    names = ["Xc", "Yc", "Zc", "w", "p", "k"]
+    for i in range(len(names)):
+        plt.plot(x_vals, std_vec[i], '-o', label=names[i])
+
+    plt.xlabel("# of Observed Image Points", fontdict={'family':'serif','color':'black','size':10})
+    plt.ylabel('Standard Deviation', fontdict={'family':'serif','color':'black','size':10})
+    plt.title("Standard Deviation Trend", fontdict ={'family':'serif','color':'black','size':12})
+    plt.legend()
+    plt.show()
+
 if __name__=="__main__":
-    # Example
-    x = [106.399, 18.989, 98.681, 9.278]
-    y = [90.426, 93.365, -62.769, -92.926]
+    # # Example
+    # x = [106.399, 18.989, 98.681, 9.278]
+    # y = [90.426, 93.365, -62.769, -92.926]
 
-    Xo = [7350.27, 6717.22, 6905.26, 6172.84]
-    Yo = [4382.54, 4626.41, 3279.84, 3269.45]
-    Zo = [276.42, 280.05, 266.47, 248.10]
+    # Xo = [7350.27, 6717.22, 6905.26, 6172.84]
+    # Yo = [4382.54, 4626.41, 3279.84, 3269.45]
+    # Zo = [276.42, 280.05, 266.47, 248.10]
 
-    c = 152.150 # mm
-    format_size = 229 # mm
-    S = 7800
+    # c = 152.150 # mm
+    # format_size = 229 # mm
+    # S = 7800
+    # sigma_obs = 15e-3 # mm
+    # resection = Resection(x, y, Xo, Yo, Zo, c, S, format_size, sigma_obs)
+    # resection.report()
+##########################################################################################################################
+    # image 27
+    x_27 = [-9.444, 18.919, 90.289, 18.174, 44.681, -7.578, 52.736]
+    y_27 = [96.236, -81.819, -91.049, 109.538, 7.483, -49.077, -93.140]
+    # image 28
+    x_28 = [-105.378, -72.539, -1.405, -77.840, -48.786, -98.814, -38.924]
+    y_28 = [98.756, -79.786, -86.941, 113.375, 10.165, -48.039, -90.035]
+    # control points
+    Xo = [-399.28, 475.55, 517.62, -466.39, 42.73, 321.09, 527.78]
+    Yo = [-679.72, -538.18, -194.43, -542.31, -412.19, -667.45, -375.72]
+    Zo = [1090.96, 1090.5, 1090.65, 1091.55, 1090.82, 1083.49, 1092]
+
+    c = 153.358 # mm
+    format_size = 228.6 # mm
+    S = 5000
     sigma_obs = 15 # um
-    resection = Resection(x, y, Xo, Yo, Zo, c, S, format_size, sigma_obs)
-    resection.report()
+    corr_27 = []
+    corr_28 = []
 
-    # # image 27
-    # x_27 = [-9.444, 18.919, 90.289, 18.174, 44.681, -7.578, 52.736]
-    # y_27 = [96.236, -81.819, -91.049, 109.538, 7.483, -49.077, -93.140]
-    # # image 28
-    # x_28 = [-105.378, -72.539, -1.405, -77.840, -48.786, -98.814, -38.924]
-    # y_28 = [98.756, -79.786, -86.941, 113.375, 10.165, -48.039, -90.035]
-    # # control points
-    # Xo = [-399.28, 475.55, 517.62, -466.39, 42.73, 321.09, 527.78]
-    # Yo = [-679.72, -538.18, -194.43, -542.31, -412.19, -667.45, -375.72]
-    # Zo = [1090.96, 1090.5, 1090.65, 1091.55, 1090.82, 1083.49, 1092]
-
-    # c = 153.358 # mm
-    # format_size = 228.6 # mm
-    # S = 5000
-    # sigma_obs = 15 # um
-    # corr_27 = []
-    # corr_28 = []
-    # for i in range(4):
-    #     resection_27 = Resection(x_27[0:3+i], y_27[0:3+i], Xo[0:3+i], Yo[0:3+i], Zo[0:3+i], c, S, format_size, sigma_obs)
-    #     print('-'*80)
-    #     print(f'Printing Report for Image 27, points 100, 104, 105, 200 - 20{i}\n')
-    #     print('-'*80)
-    #     resection_27.report()
-    #     corr_27.append(resection_27.store_corr_mat())
-    #     print('-'*80)
+    std_27 = []
+    std_28 = []
+    for i in range(4):
+        resection_27 = Resection(x_27[0:3+i], y_27[0:3+i], Xo[0:3+i], Yo[0:3+i], Zo[0:3+i], c, S, format_size, sigma_obs)
+        print('-'*80)
+        print(f'Printing Report for Image 27, points 100, 104, 105, 200 - 20{i}\n')
+        print('-'*80)
+        resection_27.report()
+        corr_27.append(resection_27.store_corr_mat())
+        std_27.append(resection_27.store_std_dev())
+        print('-'*80)
         
-    #     resection_28 = Resection(x_28[0:3+i], y_28[0:3+i], Xo[0:3+i], Yo[0:3+i], Zo[0:3+i], c, S, format_size, sigma_obs)
-    #     print('-'*80)
-    #     print(f'Printing Report for Image 28, points 100, 104, 105, 200 - 20{i}\n')
-    #     print('-'*80)
-    #     resection_28.report()
-    #     corr_28.append(resection_28.store_corr_mat())
-    #     print('-'*80)
+        resection_28 = Resection(x_28[0:3+i], y_28[0:3+i], Xo[0:3+i], Yo[0:3+i], Zo[0:3+i], c, S, format_size, sigma_obs)
+        print('-'*80)
+        print(f'Printing Report for Image 28, points 100, 104, 105, 200 - 20{i}\n')
+        print('-'*80)
+        resection_28.report()
+        corr_28.append(resection_28.store_corr_mat())
+        std_28.append(resection_28.store_std_dev())
+        print('-'*80)
 
-    # size = len(corr_27)
-    # corr_27 = np.array(corr_27).T
-    # print(corr_27)
-    # plot_corr(size, corr_27)
+    corr_27 = np.array(corr_27).T
+    plot_corr(corr_27)
 
-    # size = len(corr_28)
-    # corr_28 = np.array(corr_28).T
-    # print(corr_28)
-    # plot_corr(size, corr_28)
+    corr_28 = np.array(corr_28).T
+    plot_corr(corr_28)
+
+    std_27 = np.array(std_27).T
+    plot_std(std_27)
+
+    std_28 = np.array(std_28).T
+    plot_std(std_28)
+
+
 
     
 
