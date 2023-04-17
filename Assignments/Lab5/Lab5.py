@@ -191,7 +191,6 @@ class Resection:
                 self.R[3][4],
                 self.R[3][5],
                 self.R[4][5]
-
             ]
     def store_std_dev(self):
         return self.std
