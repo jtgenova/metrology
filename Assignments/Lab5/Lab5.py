@@ -239,7 +239,9 @@ if __name__=="__main__":
     # sigma_obs = 15e-3 # mm
     # resection = Resection(x, y, Xo, Yo, Zo, c, S, format_size, sigma_obs)
     # resection.report()
+
 ##########################################################################################################################
+    
     # image 27
     x_27 = [-9.444, 18.919, 90.289, 18.174, 44.681, -7.578, 52.736]
     y_27 = [96.236, -81.819, -91.049, 109.538, 7.483, -49.077, -93.140]
@@ -279,15 +281,15 @@ if __name__=="__main__":
         std_28.append(resection_28.store_std_dev())
         print('-'*80)
 
+    # plot correlation coefficient matrix trend
     corr_27 = np.array(corr_27).T
     plot_corr(corr_27)
-
     corr_28 = np.array(corr_28).T
     plot_corr(corr_28)
 
+    # plot standard deviation trend
     std_27 = np.array(std_27).T
     plot_std(std_27)
-
     std_28 = np.array(std_28).T
     plot_std(std_28)
 
