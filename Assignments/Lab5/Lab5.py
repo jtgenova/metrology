@@ -15,6 +15,8 @@ import preLab5 as prelab5
 from statistics import mean, stdev
 import matplotlib.pyplot as plt
 
+np.set_printoptions(linewidth=400)
+
 class Resection:
     def __init__(self, x, y, Xo, Yo, Zo, c, S, format_size, sigma_obs):
         self.x = x
@@ -25,10 +27,10 @@ class Resection:
         self.c = c
         self.S = S
         self.format_size = format_size
-        self.sigma_obs = sigma_obs*10**-6
-        self.P = 1/(sigma_obs**2)*np.identity(len(x*2))
-        self.xp = 0
-        self.yp = 0
+        self.sigma_obs = sigma_obs
+        self.P = 1/((sigma_obs*10**3)**2)*np.identity(len(x*2))
+        self.xp = -0.006
+        self.yp = 0.006
 
     def find_approx(self):
         a, b, delta_x, delta_y = prelab5.similarity_transform(self.x, self.y, self.Xo, self.Yo)
@@ -54,7 +56,6 @@ class Resection:
         dx_dXc = (-self.c/W**2) * (M[2][0]*U - M[0][0]*W)
         dx_dYc = (-self.c/W**2) * (M[2][1]*U - M[0][1]*W)
         dx_dZc = (-self.c/W**2) * (M[2][2]*U - M[0][2]*W)
-
         dx_dw = (-self.c/W**2)*((Yi - Y_c)*(U*M[2][2] - W*M[0][2]) - (Zi - Z_c)*(U*M[2][1] - W*M[0][1]))
         dx_dp = (-self.c/W**2)*((Xi - X_c)*(-W*sin(p)*cos(k) - U*cos(p)) + (Yi - Y_c)*(W*sin(w)*cos(p)*cos(k) - U*sin(w)*sin(p)) + (Zi - Z_c)*(-W*cos(w)*cos(p)*cos(k) + U*cos(w)*sin(p)))
         dx_dk = -self.c*V/W
@@ -64,9 +65,8 @@ class Resection:
         dy_dXc = (-self.c/W**2) * (M[2][0]*V - M[1][0]*W)
         dy_dYc = (-self.c/W**2) * (M[2][1]*V - M[1][1]*W)
         dy_dZc = (-self.c/W**2) * (M[2][2]*V - M[1][2]*W)
-
         dy_dw = (-self.c/W**2)*((Yi - Y_c)*(V*M[2][2] - W*M[1][2]) - (Zi - Z_c)*(V*M[2][1] - W*M[1][1]))
-        dy_dp = (-self.c/W**2)*((Xi - X_c)*(-W*sin(p)*sin(k) - V*cos(p)) + (Yi - Y_c)*(-W*sin(w)*cos(p)*sin(k) - V*sin(w)*sin(p)) + (Zi - Z_c)*(W*cos(w)*cos(p)*sin(k) + V*cos(w)*sin(p)))
+        dy_dp = (-self.c/W**2)*((Xi - X_c)*(W*sin(p)*sin(k) - V*cos(p)) + (Yi - Y_c)*(-W*sin(w)*cos(p)*sin(k) - V*sin(w)*sin(p)) + (Zi - Z_c)*(W*cos(w)*cos(p)*sin(k) + V*cos(w)*sin(p)))
         dy_dk = self.c*U/W
         dy = [dy_dXc, dy_dYc, dy_dZc, dy_dw, dy_dp, dy_dk]
 
@@ -100,8 +100,9 @@ class Resection:
     
     def converge(self):
         r_obs = self.sigma_obs
+        c = self.c*10**-3
         tol_coords = self.S*r_obs/10
-        tol_tilt = r_obs/(10*self.c*10**-3)
+        tol_tilt = r_obs/(10*c)
         x_max = (self.format_size/2*math.sqrt(2))*10**-3
         tol_k = r_obs/(10*x_max)
         print(f'Tol_coords: {round(tol_coords, 6)}')
@@ -119,6 +120,7 @@ class Resection:
             k_old = self.k
 
             self.X_c, self.Y_c, self.Z_c, self.w, self.p, self.k, self.A_mat= self.find_delta(self.X_c, self.Y_c, self.Z_c, self.w, self.p, self.k)
+
             
             if abs(self.X_c-X_c_old)<tol_coords and abs(self.Y_c-Y_c_old)<tol_coords and abs(self.Z_c-Z_c_old)<tol_coords and abs(self.w-w_old)<tol_tilt and abs(self.p-p_old)<tol_tilt and abs(self.k-k_old)<tol_k:
                 print(f'Converged at {i+1} iterations!')
@@ -157,10 +159,10 @@ class Resection:
         x_rms = math.sqrt((1/len(self.Xo))*x_rms)
         y_rms = math.sqrt((1/len(self.Yo))*y_rms)
 
-        print(f'Vx: {np.around(res_x, 4)}')
-        print(f'Vy: {np.around(res_y, 4)}')
-        print(f'x_rms: {round(x_rms, 4)}')
-        print(f'y_rms: {round(y_rms, 4)}\n')
+        print(f'Vx: {np.around(res_x, 6)}')
+        print(f'Vy: {np.around(res_y, 6)}')
+        print(f'x_rms: {round(x_rms, 6)}')
+        print(f'y_rms: {round(y_rms, 6)}\n')
 
     def find_corr_matrix(self):
         S_mat = np.zeros(shape=(6,6))
@@ -172,9 +174,9 @@ class Resection:
         
         S_inv = inv(S_mat)
         self.R = np.dot(S_inv, np.dot(C, S_inv))
-        print(f'Correlation Coefficient Matrix: \n{np.around(self.R, 4)}\n')
-        print(f'Standard Deviation: \n{np.around(self.std, 4)}\n')
-    
+        print(f'Correlation Coefficient Matrix: \n{np.around(self.R, 10)}\n')
+        print(f'Standard Deviation: \n{np.around(self.std, 10)}\n')
+
     def store_corr_mat(self):
         return [self.R[0][1],
                 self.R[0][2],
@@ -190,8 +192,8 @@ class Resection:
                 self.R[2][5],
                 self.R[3][4],
                 self.R[3][5],
-                self.R[4][5]
-            ]
+                self.R[4][5]]
+    
     def store_std_dev(self):
         return self.std
 
@@ -209,7 +211,7 @@ def plot_corr(corr_mat):
     plt.xlabel("# of Observed Image Points", fontdict={'family':'serif','color':'black','size':10})
     plt.ylabel('Correlation', fontdict={'family':'serif','color':'black','size':10})
     plt.title("Correlation Trend", fontdict ={'family':'serif','color':'black','size':12})
-    plt.legend()
+    plt.legend(loc='upper left')
     plt.show()
 
 def plot_std(std_vec):
@@ -221,27 +223,10 @@ def plot_std(std_vec):
     plt.xlabel("# of Observed Image Points", fontdict={'family':'serif','color':'black','size':10})
     plt.ylabel('Standard Deviation', fontdict={'family':'serif','color':'black','size':10})
     plt.title("Standard Deviation Trend", fontdict ={'family':'serif','color':'black','size':12})
-    plt.legend()
+    plt.legend(loc='upper left')
     plt.show()
 
 if __name__=="__main__":
-    # # Example
-    # x = [106.399, 18.989, 98.681, 9.278]
-    # y = [90.426, 93.365, -62.769, -92.926]
-
-    # Xo = [7350.27, 6717.22, 6905.26, 6172.84]
-    # Yo = [4382.54, 4626.41, 3279.84, 3269.45]
-    # Zo = [276.42, 280.05, 266.47, 248.10]
-
-    # c = 152.150 # mm
-    # format_size = 229 # mm
-    # S = 7800
-    # sigma_obs = 15e-3 # mm
-    # resection = Resection(x, y, Xo, Yo, Zo, c, S, format_size, sigma_obs)
-    # resection.report()
-
-##########################################################################################################################
-    
     # image 27
     x_27 = [-9.444, 18.919, 90.289, 18.174, 44.681, -7.578, 52.736]
     y_27 = [96.236, -81.819, -91.049, 109.538, 7.483, -49.077, -93.140]
@@ -256,14 +241,14 @@ if __name__=="__main__":
     c = 153.358 # mm
     format_size = 228.6 # mm
     S = 5000
-    sigma_obs = 15 # um
+    sigma_obs = 15e-6 
     corr_27 = []
     corr_28 = []
 
     std_27 = []
     std_28 = []
     for i in range(4):
-        resection_27 = Resection(x_27[0:3+i], y_27[0:3+i], Xo[0:3+i], Yo[0:3+i], Zo[0:3+i], c, S, format_size, sigma_obs)
+        resection_27 = Resection(x_27[0:4+i], y_27[0:4+i], Xo[0:4+i], Yo[0:4+i], Zo[0:4+i], c, S, format_size, sigma_obs)
         print('-'*80)
         print(f'Printing Report for Image 27, points 100, 104, 105, 200 - 20{i}\n')
         print('-'*80)
@@ -272,7 +257,7 @@ if __name__=="__main__":
         std_27.append(resection_27.store_std_dev())
         print('-'*80)
         
-        resection_28 = Resection(x_28[0:3+i], y_28[0:3+i], Xo[0:3+i], Yo[0:3+i], Zo[0:3+i], c, S, format_size, sigma_obs)
+        resection_28 = Resection(x_28[0:4+i], y_28[0:4+i], Xo[0:4+i], Yo[0:4+i], Zo[0:4+i], c, S, format_size, sigma_obs)
         print('-'*80)
         print(f'Printing Report for Image 28, points 100, 104, 105, 200 - 20{i}\n')
         print('-'*80)
@@ -292,8 +277,3 @@ if __name__=="__main__":
     plot_std(std_27)
     std_28 = np.array(std_28).T
     plot_std(std_28)
-
-
-
-    
-
