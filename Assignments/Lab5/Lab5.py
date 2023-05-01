@@ -7,12 +7,12 @@ Description: Resection
 Deadline: April 19, 2023 10:00 AM
 """
 import numpy as np
-from numpy.linalg import inv, det
+from numpy.linalg import inv
 import math
 from math import sin, cos
 from statistics import mean
 import preLab5 as prelab5
-from statistics import mean, stdev
+from statistics import mean
 import matplotlib.pyplot as plt
 
 np.set_printoptions(linewidth=400)
@@ -241,7 +241,7 @@ if __name__=="__main__":
     c = 153.358 # mm
     format_size = 228.6 # mm
     S = 5000
-    sigma_obs = 15e-6 
+    sigma_obs = 6e-6 
     corr_27 = []
     corr_28 = []
 
