@@ -5,6 +5,8 @@ import math
 class Question_2:
     def __init__(self, M):
         self.M = M
+        print("-"*80)
+        print("Question 2")
     
     def rot_mat(self, w, p, k):
         R1 = np.array([[1, 0 ,0],
@@ -28,7 +30,7 @@ class Question_2:
         R1, R2, R3 = self.rot_mat(w, p, k)
         R = np.dot(R3, np.dot(R2, R1))
         print("-"*50)
-        print(f"R = R3*R2*R1\n{R}")
+        print(f"R = R3*R2*R1")
         print(f"omega = {round(math.degrees(w), 4)}")
         print(f"phi = {round(math.degrees(p), 4)}")
         print(f"kappa = {round(math.degrees(k), 4)}")
@@ -40,7 +42,7 @@ class Question_2:
         R1, R2, R3 = self.rot_mat(w, p, k)
         R = np.dot(R1, np.dot(R2, R3))
         print("-"*50)
-        print(f"R = R1*R2*R3\n{R}")
+        print(f"R = R1*R2*R3")
         print(f"omega = {round(math.degrees(w), 4)}")
         print(f"phi = {round(math.degrees(p), 4)}")
         print(f"kappa = {round(math.degrees(k), 4)}")
@@ -52,7 +54,7 @@ class Question_2:
         R1, R2, R3 = self.rot_mat(w, p, k)
         R = np.dot(R3, np.dot(R1, R2))
         print("-"*50)
-        print(f"R = R3*R1*R2\n{R}")
+        print(f"R = R3*R1*R2")
         print(f"omega = {round(math.degrees(w), 4)}")
         print(f"phi = {round(math.degrees(p), 4)}")
         print(f"kappa = {round(math.degrees(k), 4)}")
